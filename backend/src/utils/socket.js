@@ -1,0 +1,14 @@
+let io;
+
+const setSocketIO = (socketIO) => {
+  io = socketIO;
+};
+
+const getSocketIO = () => {
+  return io;
+};
+
+module.exports = {
+  setSocketIO,
+  getSocketIO,
+};
