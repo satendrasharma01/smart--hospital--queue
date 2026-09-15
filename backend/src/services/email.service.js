@@ -1,5 +1,7 @@
 const nodemailer = require("nodemailer");
 
+const HOSPITAL_TIMEZONE = "Asia/Kolkata";
+
 const escapeHtml = (value) =>
   String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -8,27 +10,116 @@ const escapeHtml = (value) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+/*
+ * =====================================================
+ * DATE / TIME HELPERS
+ * Hospital timezone is always Asia/Kolkata.
+ * =====================================================
+ */
+
+const formatHospitalDate = (value) => {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleDateString("en-IN", {
+    timeZone: HOSPITAL_TIMEZONE,
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+const formatHospitalTime = (value) => {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleTimeString("en-IN", {
+    timeZone: HOSPITAL_TIMEZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const formatHospitalDateTime = (value) => {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleString("en-IN", {
+    timeZone: HOSPITAL_TIMEZONE,
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+/*
+ * =====================================================
+ * SMTP CONFIGURATION
+ * =====================================================
+ */
+
 const smtpHost = process.env.SMTP_HOST;
-const smtpPort = Number(process.env.SMTP_PORT || 465);
+
+const smtpPort = Number(
+  process.env.SMTP_PORT || 465
+);
+
 const smtpSecure =
-  process.env.SMTP_SECURE === "true" || smtpPort === 465;
+  process.env.SMTP_SECURE === "true" ||
+  smtpPort === 465;
 
 const smtpUser = process.env.SMTP_USER;
-const smtpPassword = process.env.SMTP_PASSWORD;
-const mailFrom = process.env.MAIL_FROM || smtpUser;
 
-// Never print the password.
+const smtpPassword =
+  process.env.SMTP_PASSWORD;
+
+const mailFrom =
+  process.env.MAIL_FROM || smtpUser;
+
+/*
+ * Never print password.
+ */
+
 console.log("SMTP configuration loaded:", {
   host: smtpHost,
   port: smtpPort,
   secure: smtpSecure,
   user: smtpUser || "NOT_CONFIGURED",
-  passwordConfigured: Boolean(smtpPassword),
+  passwordConfigured: Boolean(
+    smtpPassword
+  ),
   from: mailFrom || "NOT_CONFIGURED",
 });
 
 if (!smtpHost) {
-  console.warn("WARNING: SMTP_HOST is not configured.");
+  console.warn(
+    "WARNING: SMTP_HOST is not configured."
+  );
 }
 
 if (!smtpUser || !smtpPassword) {
@@ -37,409 +128,532 @@ if (!smtpUser || !smtpPassword) {
   );
 }
 
-const transporter = nodemailer.createTransport({
-  host: smtpHost,
-  port: smtpPort,
-  secure: smtpSecure,
+/*
+ * =====================================================
+ * NODEMAILER TRANSPORTER
+ * =====================================================
+ */
 
-  auth: {
-    user: smtpUser,
-    pass: smtpPassword,
-  },
+const transporter =
+  nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
 
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
+    auth: {
+      user: smtpUser,
+      pass: smtpPassword,
+    },
+
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+  });
 
 /*
- * Verify SMTP connection/configuration.
- * This does not send an email.
+ * =====================================================
+ * VERIFY SMTP
+ * =====================================================
+ *
+ * Does NOT send an email.
+ * It only verifies SMTP connection/configuration.
  */
-const verifyEmailTransporter = async () => {
-  if (!smtpHost) {
-    throw new Error("SMTP_HOST is not configured");
-  }
 
-  if (!smtpUser || !smtpPassword) {
-    throw new Error("SMTP credentials are not configured");
-  }
+const verifyEmailTransporter =
+  async () => {
+    if (!smtpHost) {
+      throw new Error(
+        "SMTP_HOST is not configured"
+      );
+    }
 
-  try {
-    await transporter.verify();
+    if (!smtpUser || !smtpPassword) {
+      throw new Error(
+        "SMTP credentials are not configured"
+      );
+    }
 
-    console.log("SMTP transporter verified successfully.");
-    return true;
-  } catch (error) {
-    console.error("SMTP transporter verification failed:", {
-      code: error.code,
-      command: error.command,
-      message: error.message,
-    });
+    try {
+      await transporter.verify();
 
-    throw error;
-  }
-};
+      console.log(
+        "SMTP transporter verified successfully."
+      );
 
-const sendEmail = async ({ to, subject, html }) => {
+      return true;
+    } catch (error) {
+      console.error(
+        "SMTP transporter verification failed:",
+        {
+          code: error.code,
+          command: error.command,
+          message: error.message,
+        }
+      );
+
+      throw error;
+    }
+  };
+
+/*
+ * =====================================================
+ * GENERIC SEND EMAIL
+ * =====================================================
+ */
+
+const sendEmail = async ({
+  to,
+  subject,
+  html,
+}) => {
   if (!to) {
-    throw new Error("Recipient email is required");
+    throw new Error(
+      "Recipient email is required"
+    );
   }
 
   if (!smtpHost) {
-    throw new Error("SMTP_HOST is not configured");
+    throw new Error(
+      "SMTP_HOST is not configured"
+    );
   }
 
   if (!smtpUser || !smtpPassword) {
-    throw new Error("SMTP credentials are not configured");
+    throw new Error(
+      "SMTP credentials are not configured"
+    );
   }
 
   if (!mailFrom) {
-    throw new Error("MAIL_FROM is not configured");
+    throw new Error(
+      "MAIL_FROM is not configured"
+    );
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: mailFrom,
-      to,
-      subject,
-      html,
-    });
+    const info =
+      await transporter.sendMail({
+        from: mailFrom,
+        to,
+        subject,
+        html,
+      });
 
-    console.log("Email sent successfully:", info.messageId);
+    console.log(
+      "Email sent successfully:",
+      {
+        messageId: info.messageId,
+        to,
+        subject,
+      }
+    );
 
     return info;
   } catch (error) {
-    console.error("Email sending failed:", {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      message: error.message,
-    });
+    console.error(
+      "Email sending failed:",
+      {
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        message: error.message,
+      }
+    );
 
     throw error;
   }
 };
 
 /*
- * Patient - Appointment Confirmation
+ * =====================================================
+ * PATIENT - APPOINTMENT CONFIRMATION
+ * =====================================================
  */
-const sendAppointmentConfirmationEmail = async ({
-  patientName,
-  patientEmail,
-  doctorName,
-  appointmentDate,
-  tokenNumber,
-}) => {
-  const formattedDate = new Date(
-    appointmentDate
-  ).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
 
-  const formattedTime = new Date(
-    appointmentDate
-  ).toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const sendAppointmentConfirmationEmail =
+  async ({
+    patientName,
+    patientEmail,
+    doctorName,
+    appointmentDate,
+    tokenNumber,
+  }) => {
+    const formattedDate =
+      formatHospitalDate(
+        appointmentDate
+      );
 
-  return sendEmail({
-    to: patientEmail,
+    const formattedTime =
+      formatHospitalTime(
+        appointmentDate
+      );
 
-    subject: "Appointment Confirmed - Smart Hospital",
+    return sendEmail({
+      to: patientEmail,
 
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
-          <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      subject:
+        "Appointment Confirmed - Smart Hospital",
 
-            <div style="padding:24px;background:#0f172a;color:#ffffff;">
-              <h1 style="margin:0;font-size:22px;">
-                Smart Hospital
-              </h1>
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+            <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
-              <p style="margin:6px 0 0;color:#cbd5e1;">
-                Appointment Confirmation
-              </p>
-            </div>
+              <div style="padding:24px;background:#0f172a;color:#ffffff;">
+                <h1 style="margin:0;font-size:22px;">
+                  Smart Hospital
+                </h1>
 
-            <div style="padding:28px;">
+                <p style="margin:6px 0 0;color:#cbd5e1;">
+                  Appointment Confirmation
+                </p>
+              </div>
 
-              <p style="font-size:16px;color:#0f172a;">
-                Hello ${escapeHtml(patientName)},
-              </p>
+              <div style="padding:28px;">
 
-              <p style="font-size:14px;line-height:1.6;color:#475569;">
-                Your appointment has been successfully booked.
-              </p>
-
-              <div style="margin:24px 0;padding:20px;background:#f8fafc;border-radius:10px;">
-
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Doctor
+                <p style="font-size:16px;color:#0f172a;">
+                  Hello ${escapeHtml(
+                    patientName
+                  )},
                 </p>
 
-                <p style="margin:0 0 18px;color:#0f172a;font-size:16px;font-weight:bold;">
-                  Dr. ${escapeHtml(doctorName)}
+                <p style="font-size:14px;line-height:1.6;color:#475569;">
+                  Your appointment has been successfully booked.
                 </p>
 
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Date
+                <div style="margin:24px 0;padding:20px;background:#f8fafc;border-radius:10px;">
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Doctor
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:16px;font-weight:bold;">
+                    Dr. ${escapeHtml(
+                      doctorName
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Date
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
+                    ${escapeHtml(
+                      formattedDate
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Time
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
+                    ${escapeHtml(
+                      formattedTime
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Queue Token
+                  </p>
+
+                  <p style="margin:0;color:#0f172a;font-size:22px;font-weight:bold;">
+                    #${escapeHtml(
+                      tokenNumber
+                    )}
+                  </p>
+
+                </div>
+
+                <p style="font-size:14px;line-height:1.6;color:#475569;">
+                  Please arrive on time and keep your appointment details available when visiting the hospital.
                 </p>
 
-                <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
-                  ${escapeHtml(formattedDate)}
+                <p style="font-size:13px;color:#64748b;">
+                  Appointment time is shown in India Standard Time (IST).
                 </p>
 
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Time
-                </p>
-
-                <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
-                  ${escapeHtml(formattedTime)}
-                </p>
-
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Queue Token
-                </p>
-
-                <p style="margin:0;color:#0f172a;font-size:22px;font-weight:bold;">
-                  #${escapeHtml(tokenNumber)}
+                <p style="margin-top:28px;font-size:13px;color:#94a3b8;">
+                  This is an automated notification from Smart Hospital.
                 </p>
 
               </div>
-
-              <p style="font-size:14px;line-height:1.6;color:#475569;">
-                Please arrive on time and keep your appointment details
-                available when visiting the hospital.
-              </p>
-
-              <p style="margin-top:28px;font-size:13px;color:#94a3b8;">
-                This is an automated notification from Smart Hospital.
-              </p>
-
             </div>
-          </div>
-        </body>
-      </html>
-    `,
-  });
-};
+          </body>
+        </html>
+      `,
+    });
+  };
 
 /*
- * Doctor - New Appointment Notification
+ * =====================================================
+ * DOCTOR - NEW APPOINTMENT NOTIFICATION
+ * =====================================================
  */
-const sendNewAppointmentDoctorEmail = async ({
-  doctorName,
-  doctorEmail,
-  patientName,
-  appointmentDate,
-  tokenNumber,
-}) => {
-  const formattedDate = new Date(
-    appointmentDate
-  ).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
 
-  const formattedTime = new Date(
-    appointmentDate
-  ).toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const sendNewAppointmentDoctorEmail =
+  async ({
+    doctorName,
+    doctorEmail,
+    patientName,
+    appointmentDate,
+    tokenNumber,
+  }) => {
+    const formattedDate =
+      formatHospitalDate(
+        appointmentDate
+      );
 
-  return sendEmail({
-    to: doctorEmail,
+    const formattedTime =
+      formatHospitalTime(
+        appointmentDate
+      );
 
-    subject: "New Patient Appointment - Smart Hospital",
+    return sendEmail({
+      to: doctorEmail,
 
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+      subject:
+        "New Patient Appointment - Smart Hospital",
 
-          <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
 
-            <div style="padding:24px;background:#0f172a;color:#ffffff;">
-              <h1 style="margin:0;font-size:22px;">
-                Smart Hospital
-              </h1>
+            <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
-              <p style="margin:6px 0 0;color:#cbd5e1;">
-                New Appointment Notification
-              </p>
-            </div>
+              <div style="padding:24px;background:#0f172a;color:#ffffff;">
+                <h1 style="margin:0;font-size:22px;">
+                  Smart Hospital
+                </h1>
 
-            <div style="padding:28px;">
+                <p style="margin:6px 0 0;color:#cbd5e1;">
+                  New Appointment Notification
+                </p>
+              </div>
 
-              <p style="font-size:16px;color:#0f172a;">
-                Hello Dr. ${escapeHtml(doctorName)},
-              </p>
+              <div style="padding:28px;">
 
-              <p style="font-size:14px;line-height:1.6;color:#475569;">
-                A new patient appointment has been booked for you.
-              </p>
-
-              <div style="margin:24px 0;padding:20px;background:#f8fafc;border-radius:10px;">
-
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Patient
+                <p style="font-size:16px;color:#0f172a;">
+                  Hello Dr. ${escapeHtml(
+                    doctorName
+                  )},
                 </p>
 
-                <p style="margin:0 0 18px;color:#0f172a;font-size:16px;font-weight:bold;">
-                  ${escapeHtml(patientName)}
+                <p style="font-size:14px;line-height:1.6;color:#475569;">
+                  A new patient appointment has been booked for you.
                 </p>
 
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Date
+                <div style="margin:24px 0;padding:20px;background:#f8fafc;border-radius:10px;">
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Patient
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:16px;font-weight:bold;">
+                    ${escapeHtml(
+                      patientName
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Date
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
+                    ${escapeHtml(
+                      formattedDate
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Time
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
+                    ${escapeHtml(
+                      formattedTime
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Queue Token
+                  </p>
+
+                  <p style="margin:0;color:#0f172a;font-size:22px;font-weight:bold;">
+                    #${escapeHtml(
+                      tokenNumber
+                    )}
+                  </p>
+
+                </div>
+
+                <p style="font-size:14px;line-height:1.6;color:#475569;">
+                  Please review the appointment from your doctor dashboard.
                 </p>
 
-                <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
-                  ${escapeHtml(formattedDate)}
+                <p style="font-size:13px;color:#64748b;">
+                  Appointment time is shown in India Standard Time (IST).
                 </p>
 
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Time
-                </p>
-
-                <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
-                  ${escapeHtml(formattedTime)}
-                </p>
-
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Queue Token
-                </p>
-
-                <p style="margin:0;color:#0f172a;font-size:22px;font-weight:bold;">
-                  #${escapeHtml(tokenNumber)}
+                <p style="margin-top:28px;font-size:13px;color:#94a3b8;">
+                  This is an automated notification from Smart Hospital.
                 </p>
 
               </div>
-
-              <p style="font-size:14px;line-height:1.6;color:#475569;">
-                Please review the appointment from your doctor dashboard.
-              </p>
-
-              <p style="margin-top:28px;font-size:13px;color:#94a3b8;">
-                This is an automated notification from Smart Hospital.
-              </p>
-
             </div>
-          </div>
 
-        </body>
-      </html>
-    `,
-  });
-};
+          </body>
+        </html>
+      `,
+    });
+  };
 
 /*
- * Patient - Appointment Completed
+ * =====================================================
+ * PATIENT - APPOINTMENT COMPLETED
+ * =====================================================
  */
-const sendAppointmentCompletedEmail = async ({
-  patientName,
-  patientEmail,
-  doctorName,
-  appointmentDate,
-  tokenNumber,
-}) => {
-  const formattedDate = new Date(
-    appointmentDate
-  ).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
 
-  return sendEmail({
-    to: patientEmail,
+const sendAppointmentCompletedEmail =
+  async ({
+    patientName,
+    patientEmail,
+    doctorName,
+    appointmentDate,
+    tokenNumber,
+  }) => {
+    const formattedDate =
+      formatHospitalDate(
+        appointmentDate
+      );
 
-    subject: "Appointment Completed - Smart Hospital",
+    const formattedTime =
+      formatHospitalTime(
+        appointmentDate
+      );
 
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
+    return sendEmail({
+      to: patientEmail,
 
-          <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      subject:
+        "Appointment Completed - Smart Hospital",
 
-            <div style="padding:24px;background:#0f172a;color:#ffffff;">
-              <h1 style="margin:0;font-size:22px;">
-                Smart Hospital
-              </h1>
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
 
-              <p style="margin:6px 0 0;color:#cbd5e1;">
-                Appointment Completed
-              </p>
-            </div>
+            <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
-            <div style="padding:28px;">
+              <div style="padding:24px;background:#0f172a;color:#ffffff;">
+                <h1 style="margin:0;font-size:22px;">
+                  Smart Hospital
+                </h1>
 
-              <p style="font-size:16px;color:#0f172a;">
-                Hello ${escapeHtml(patientName)},
-              </p>
+                <p style="margin:6px 0 0;color:#cbd5e1;">
+                  Appointment Completed
+                </p>
+              </div>
 
-              <p style="font-size:14px;line-height:1.6;color:#475569;">
-                Your appointment has been marked as completed.
-              </p>
+              <div style="padding:28px;">
 
-              <div style="margin:24px 0;padding:20px;background:#f8fafc;border-radius:10px;">
-
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Doctor
+                <p style="font-size:16px;color:#0f172a;">
+                  Hello ${escapeHtml(
+                    patientName
+                  )},
                 </p>
 
-                <p style="margin:0 0 18px;color:#0f172a;font-size:16px;font-weight:bold;">
-                  Dr. ${escapeHtml(doctorName)}
+                <p style="font-size:14px;line-height:1.6;color:#475569;">
+                  Your appointment has been marked as completed.
                 </p>
 
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Appointment Date
+                <div style="margin:24px 0;padding:20px;background:#f8fafc;border-radius:10px;">
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Doctor
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:16px;font-weight:bold;">
+                    Dr. ${escapeHtml(
+                      doctorName
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Appointment Date
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
+                    ${escapeHtml(
+                      formattedDate
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Appointment Time
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
+                    ${escapeHtml(
+                      formattedTime
+                    )}
+                  </p>
+
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Queue Token
+                  </p>
+
+                  <p style="margin:0;color:#0f172a;font-size:22px;font-weight:bold;">
+                    #${escapeHtml(
+                      tokenNumber
+                    )}
+                  </p>
+
+                </div>
+
+                <p style="font-size:14px;line-height:1.6;color:#475569;">
+                  Thank you for using Smart Hospital.
                 </p>
 
-                <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
-                  ${escapeHtml(formattedDate)}
+                <p style="font-size:13px;color:#64748b;">
+                  Appointment time is shown in India Standard Time (IST).
                 </p>
 
-                <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
-                  Queue Token
-                </p>
-
-                <p style="margin:0;color:#0f172a;font-size:22px;font-weight:bold;">
-                  #${escapeHtml(tokenNumber)}
+                <p style="margin-top:28px;font-size:13px;color:#94a3b8;">
+                  This is an automated notification from Smart Hospital.
                 </p>
 
               </div>
-
-              <p style="font-size:14px;line-height:1.6;color:#475569;">
-                Thank you for using Smart Hospital.
-              </p>
-
-              <p style="margin-top:28px;font-size:13px;color:#94a3b8;">
-                This is an automated notification from Smart Hospital.
-              </p>
-
             </div>
-          </div>
 
-        </body>
-      </html>
-    `,
-  });
-};
+          </body>
+        </html>
+      `,
+    });
+  };
+
+/*
+ * =====================================================
+ * EXPORTS
+ * =====================================================
+ */
 
 module.exports = {
   escapeHtml,
+
+  formatHospitalDate,
+  formatHospitalTime,
+  formatHospitalDateTime,
+
   sendEmail,
+
   sendAppointmentConfirmationEmail,
+
   sendNewAppointmentDoctorEmail,
+
   sendAppointmentCompletedEmail,
+
   verifyEmailTransporter,
 };
