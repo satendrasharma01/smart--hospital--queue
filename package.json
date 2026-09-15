@@ -10,8 +10,18 @@
     "build": "npm run build --prefix frontend",
     "check:backend": "node scripts/check-backend-syntax.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "hospital queue management",
+    "appointment system",
+    "real-time queue",
+    "react",
+    "node.js",
+    "express",
+    "mongodb",
+    "socket.io",
+    "full-stack"
+  ],
+  "author": "Satendra Sharma",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {

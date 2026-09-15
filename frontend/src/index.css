@@ -15,6 +15,7 @@
 body {
   margin: 0;
   min-width: 320px;
+  overflow-x: hidden;
 }
 
 button,
@@ -22,4 +23,12 @@ input,
 textarea,
 select {
   font: inherit;
+}
+/* Responsive safety: prevent accidental viewport overflow from long operational data. */
+img, svg {
+  max-width: 100%;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
 }

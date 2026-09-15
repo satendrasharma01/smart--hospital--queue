@@ -12,6 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import AdminSidebar from "../../components/AdminSidebar";
 
 function AdminDashboard() {
   const { token, user, logout } = useAuth();
@@ -74,7 +75,9 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <>
+      <AdminSidebar />
+      <div className="min-h-screen bg-slate-50 lg:pl-64">
       {/* =====================================================
           HEADER
       ===================================================== */}
@@ -125,7 +128,7 @@ function AdminDashboard() {
           MAIN
       ===================================================== */}
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:px-6 sm:py-8">
         {/* PAGE HEADER */}
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -802,6 +805,7 @@ function AdminDashboard() {
         )}
       </main>
     </div>
+    </>
   );
 }
 
@@ -934,7 +938,7 @@ function ManagementCard({
       >
         {buttonText}
       </button>
-    </div>
+      </div>
   );
 }
 

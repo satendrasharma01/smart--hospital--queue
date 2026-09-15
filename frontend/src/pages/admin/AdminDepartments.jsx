@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Building2, Plus, Trash2 } from "lucide-react";
 import api from "../../services/api";
+import AdminSidebar from "../../components/AdminSidebar";
 
 function AdminDepartments() {
   const [departments, setDepartments] = useState([]);
@@ -58,7 +59,9 @@ function AdminDepartments() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10">
+    <>
+      <AdminSidebar />
+      <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10 lg:pl-64">
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center gap-3">
           <Building2 className="text-slate-700" />
@@ -85,7 +88,8 @@ function AdminDepartments() {
           ))}
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
 

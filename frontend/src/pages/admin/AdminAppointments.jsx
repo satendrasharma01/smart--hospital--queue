@@ -13,6 +13,7 @@ import {
 
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import AdminSidebar from "../../components/AdminSidebar";
 
 const STATUS_OPTIONS = [
   "booked",
@@ -184,11 +185,13 @@ function AdminAppointments() {
    */
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <>
+      <AdminSidebar />
+      <div className="min-h-screen bg-slate-50 lg:pl-64">
       {/* HEADER */}
 
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-6">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:px-6">
           <p className="text-sm font-medium text-slate-500">
             Smart Hospital
           </p>
@@ -204,7 +207,7 @@ function AdminAppointments() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:px-6 sm:py-8">
         {/* ERROR */}
 
         {error && (
@@ -424,6 +427,7 @@ function AdminAppointments() {
         />
       )}
     </div>
+    </>
   );
 }
 
@@ -979,7 +983,7 @@ function Detail({
       <p className="mt-1 break-words text-sm font-medium text-slate-900">
         {value}
       </p>
-    </div>
+      </div>
   );
 }
 

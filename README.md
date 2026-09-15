@@ -149,6 +149,17 @@ smart--hospital--queue/
 └── .github/workflows/        # CI validation
 ```
 
+## UI/UX and responsive design
+
+- Responsive layouts across desktop, tablet and mobile breakpoints
+- Admin dashboard with persistent desktop sidebar and mobile navigation drawer
+- Responsive patient and doctor navigation
+- Mobile-friendly forms, cards, filters and operational views
+- Responsive public navigation with mobile menu
+- Accessible navigation labels, focus states and touch-friendly controls
+- Dedicated 404 page for unknown routes
+- No horizontal viewport overflow from long operational content
+
 ## Technology stack
 
 | Layer | Technology |

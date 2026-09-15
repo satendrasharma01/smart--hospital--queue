@@ -16,6 +16,7 @@ import {
 
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import AdminSidebar from "../../components/AdminSidebar";
 
 const GENDERS = [
   "male",
@@ -183,9 +184,11 @@ function AdminPatients() {
    */
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <>
+      <AdminSidebar />
+      <div className="min-h-screen bg-slate-50 lg:pl-64">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-6">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:px-6">
           <p className="text-sm font-medium text-slate-500">
             Smart Hospital
           </p>
@@ -201,7 +204,7 @@ function AdminPatients() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:px-6 sm:py-8">
         {/* =================================================
             ERROR
         ================================================= */}
@@ -428,6 +431,7 @@ function AdminPatients() {
         />
       )}
     </div>
+    </>
   );
 }
 
@@ -1061,7 +1065,7 @@ function SummaryBox({
           {label}
         </p>
       </div>
-    </div>
+      </div>
   );
 }
 

@@ -11,6 +11,7 @@ import {
 
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import AdminSidebar from "../../components/AdminSidebar";
 
 const DAYS = [
   "monday",
@@ -614,10 +615,12 @@ function AdminDoctors() {
    */
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <>
+      <AdminSidebar />
+      <div className="min-h-screen bg-slate-50 lg:pl-64">
       <main className="min-w-0">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-6 py-7">
+          <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6">
             <p className="text-sm text-slate-500">
               Admin Portal
             </p>
@@ -634,7 +637,7 @@ function AdminDoctors() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:px-6 sm:py-8">
           {error && (
             <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4">
               <p className="text-sm text-red-700">
@@ -1300,6 +1303,7 @@ function AdminDoctors() {
         />
       )}
     </div>
+    </>
   );
 }
 
@@ -1684,7 +1688,7 @@ function Detail({
       <p className="mt-1 text-sm font-medium text-slate-900">
         {value}
       </p>
-    </div>
+      </div>
   );
 }
 
