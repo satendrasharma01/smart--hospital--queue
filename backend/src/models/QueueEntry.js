@@ -50,15 +50,25 @@ const queueEntrySchema = new mongoose.Schema(
   }
 );
 
-queueEntrySchema.index(
-  {
-    appointment: 1,
-  },
-  {
-    unique: true,
-  }
-);
-
+/*
+ * =====================================================
+ * ACTIVE QUEUE TOKEN UNIQUENESS
+ * =====================================================
+ *
+ * Only active queue entries occupy a doctor/date/token
+ * combination.
+ *
+ * Cancelled entries remain in the database for history
+ * but their token can be reused by a new appointment.
+ *
+ * Active statuses:
+ *   - booked
+ *   - waiting
+ *   - in-progress
+ *
+ * Cancelled/completed entries do not participate in this
+ * uniqueness constraint.
+ */
 queueEntrySchema.index(
   {
     doctor: 1,
@@ -79,6 +89,15 @@ queueEntrySchema.index(
   }
 );
 
+/*
+ * =====================================================
+ * QUEUE LOOKUP INDEX
+ * =====================================================
+ *
+ * Used for efficient doctor/date/status/token queries.
+ *
+ * This is intentionally non-unique.
+ */
 queueEntrySchema.index({
   doctor: 1,
   queueDate: 1,
