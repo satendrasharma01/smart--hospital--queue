@@ -130,70 +130,101 @@ if (!smtpUser || !smtpPassword) {
 
 /*
  * =====================================================
- * NODEMAILER TRANSPORTER
+ * NODEMAILER TRANSPORTERS
  * =====================================================
+ *
+ * Render can time out on implicit TLS/SMTP port 465 for some
+ * deployments. Gmail also supports authenticated STARTTLS on 587.
+ * Prefer 587 for Gmail when the old 465 configuration is present,
+ * while retaining 465 as a fallback.
  */
 
-const transporter =
-  nodemailer.createTransport({
-    host: smtpHost,
+const configuredTransportOptions = {
+  host: smtpHost,
+  auth: {
+    user: smtpUser,
+    pass: smtpPassword,
+  },
+};
+
+const transportOptions = [];
+
+if (smtpHost) {
+  const isGmail = /(^|\\.)gmail\\.com$/i.test(String(smtpHost));
+
+  if (isGmail && smtpPort === 465) {
+    transportOptions.push({
+      ...configuredTransportOptions,
+      port: 587,
+      secure: false,
+      requireTLS: true,
+    });
+  }
+
+  transportOptions.push({
+    ...configuredTransportOptions,
     port: smtpPort,
     secure: smtpSecure,
-
-    auth: {
-      user: smtpUser,
-      pass: smtpPassword,
-    },
-
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
   });
+}
+
+const transporters = transportOptions.map((options) =>
+  nodemailer.createTransport({
+    ...options,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000,
+  })
+);
+
+let activeTransporter = transporters[0] || null;
 
 /*
  * =====================================================
  * VERIFY SMTP
  * =====================================================
- *
- * Does NOT send an email.
- * It only verifies SMTP connection/configuration.
  */
 
-const verifyEmailTransporter =
-  async () => {
-    if (!smtpHost) {
-      throw new Error(
-        "SMTP_HOST is not configured"
-      );
-    }
+const verifyEmailTransporter = async () => {
+  if (!smtpHost) {
+    throw new Error("SMTP_HOST is not configured");
+  }
 
-    if (!smtpUser || !smtpPassword) {
-      throw new Error(
-        "SMTP credentials are not configured"
-      );
-    }
+  if (!smtpUser || !smtpPassword) {
+    throw new Error("SMTP credentials are not configured");
+  }
+
+  let lastError;
+
+  for (let index = 0; index < transporters.length; index += 1) {
+    const currentTransporter = transporters[index];
+    const currentOptions = transportOptions[index];
 
     try {
-      await transporter.verify();
+      await currentTransporter.verify();
+      activeTransporter = currentTransporter;
 
-      console.log(
-        "SMTP transporter verified successfully."
-      );
+      console.log("SMTP transporter verified successfully:", {
+        host: currentOptions.host,
+        port: currentOptions.port,
+        secure: currentOptions.secure,
+      });
 
       return true;
     } catch (error) {
-      console.error(
-        "SMTP transporter verification failed:",
-        {
-          code: error.code,
-          command: error.command,
-          message: error.message,
-        }
-      );
-
-      throw error;
+      lastError = error;
+      console.error("SMTP transporter verification failed:", {
+        host: currentOptions.host,
+        port: currentOptions.port,
+        code: error.code,
+        command: error.command,
+        message: error.message,
+      });
     }
-  };
+  }
+
+  throw lastError || new Error("SMTP transporter verification failed");
+};
 
 /*
  * =====================================================
@@ -201,67 +232,63 @@ const verifyEmailTransporter =
  * =====================================================
  */
 
-const sendEmail = async ({
-  to,
-  subject,
-  html,
-}) => {
+const sendEmail = async ({ to, subject, html }) => {
   if (!to) {
-    throw new Error(
-      "Recipient email is required"
-    );
+    throw new Error("Recipient email is required");
   }
 
   if (!smtpHost) {
-    throw new Error(
-      "SMTP_HOST is not configured"
-    );
+    throw new Error("SMTP_HOST is not configured");
   }
 
   if (!smtpUser || !smtpPassword) {
-    throw new Error(
-      "SMTP credentials are not configured"
-    );
+    throw new Error("SMTP credentials are not configured");
   }
 
   if (!mailFrom) {
-    throw new Error(
-      "MAIL_FROM is not configured"
-    );
+    throw new Error("MAIL_FROM is not configured");
   }
 
-  try {
-    const info =
-      await transporter.sendMail({
+  if (!transporters.length) {
+    throw new Error("SMTP transporter is not configured");
+  }
+
+  let lastError;
+  const orderedTransporters = [
+    activeTransporter,
+    ...transporters.filter((item) => item !== activeTransporter),
+  ].filter(Boolean);
+
+  for (const currentTransporter of orderedTransporters) {
+    try {
+      const info = await currentTransporter.sendMail({
         from: mailFrom,
         to,
         subject,
         html,
       });
 
-    console.log(
-      "Email sent successfully:",
-      {
+      activeTransporter = currentTransporter;
+
+      console.log("Email sent successfully:", {
         messageId: info.messageId,
         to,
         subject,
-      }
-    );
+      });
 
-    return info;
-  } catch (error) {
-    console.error(
-      "Email sending failed:",
-      {
+      return info;
+    } catch (error) {
+      lastError = error;
+      console.error("Email sending attempt failed:", {
         code: error.code,
         command: error.command,
         response: error.response,
         message: error.message,
-      }
-    );
-
-    throw error;
+      });
+    }
   }
+
+  throw lastError || new Error("Email sending failed");
 };
 
 /*

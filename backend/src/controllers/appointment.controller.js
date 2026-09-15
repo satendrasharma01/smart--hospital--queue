@@ -892,7 +892,7 @@ const createAppointment = async (
     // Patient confirmation is independent from the doctor notification.
     try {
       if (patientUser?.email) {
-        await sendAppointmentConfirmationEmail({
+        void sendAppointmentConfirmationEmail({
           patientName:
             patientUser.name ||
             "Patient",
@@ -908,11 +908,18 @@ const createAppointment = async (
             appointment.appointmentDate,
           tokenNumber:
             appointment.tokenNumber,
-        });
-
-        console.log(
-          `Appointment confirmation email sent to ${patientUser.email}`
-        );
+        })
+          .then(() => {
+            console.log(
+              `Appointment confirmation email sent to ${patientUser.email}`
+            );
+          })
+          .catch((emailError) => {
+            console.error(
+              "Appointment confirmation email failed:",
+              emailError.message
+            );
+          });
       } else {
         console.warn(
           "Appointment confirmation email skipped: patient email not found"
@@ -931,7 +938,7 @@ const createAppointment = async (
         doctorWithUser?.user?.email;
 
       if (doctorEmail) {
-        await sendNewAppointmentDoctorEmail({
+        void sendNewAppointmentDoctorEmail({
           doctorName:
             doctorWithUser?.user?.name ||
             "Doctor",
@@ -943,11 +950,18 @@ const createAppointment = async (
             appointment.appointmentDate,
           tokenNumber:
             appointment.tokenNumber,
-        });
-
-        console.log(
-          `New appointment notification sent to doctor ${doctorEmail}`
-        );
+        })
+          .then(() => {
+            console.log(
+              `New appointment notification sent to doctor ${doctorEmail}`
+            );
+          })
+          .catch((emailError) => {
+            console.error(
+              "Doctor appointment email failed:",
+              emailError.message
+            );
+          });
       } else {
         console.warn(
           "Doctor appointment email skipped: doctor email not found"
