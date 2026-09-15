@@ -293,6 +293,8 @@ function DocumentTitle() {
     title = "Manage Patients | Smart Hospital Queue";
   } else if (pathname === "/admin/appointments") {
     title = "Manage Appointments | Smart Hospital Queue";
+  } else if (pathname === "/admin/departments") {
+    title = "Manage Departments | Smart Hospital Queue";
   }
 
   document.title = title;

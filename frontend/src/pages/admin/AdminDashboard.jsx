@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
+  Building2,
   CalendarDays,
   Clock3,
   LogOut,
@@ -767,6 +768,20 @@ function AdminDashboard() {
                   onClick={() =>
                     navigate(
                       "/admin/appointments"
+                    )
+                  }
+                />
+                
+                {/* DEPARTMENTS */}
+
+                <ManagementCard
+                  icon={Building2}
+                  title="Departments"
+                  description="Create, activate, deactivate and manage hospital departments."
+                  buttonText="Manage Departments"
+                  onClick={() =>
+                    navigate(
+                      "/admin/departments"
                     )
                   }
                 />
