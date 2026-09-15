@@ -467,7 +467,7 @@ function AppointmentCard({
           </p>
 
           <p className="mt-1 text-sm font-medium text-slate-900">
-            {appointmentDate.toLocaleTimeString("en-IN", {
+            {appointmentDate.toLocaleTimeString("en-US", {
               timeZone: "Asia/Kolkata",
               hour: "2-digit",
               minute: "2-digit",

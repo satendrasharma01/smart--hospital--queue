@@ -149,8 +149,9 @@ function DoctorPatients() {
     return date.toLocaleDateString(
       "en-IN",
       {
+        timeZone: "Asia/Kolkata",
         day: "2-digit",
-        month: "short",
+        month: "long",
         year: "numeric",
       }
     );

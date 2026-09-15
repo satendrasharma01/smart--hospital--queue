@@ -323,13 +323,15 @@ function DoctorQueue() {
       }
 
       return date.toLocaleString(
-        "en-IN",
+        "en-US",
         {
+          timeZone: "Asia/Kolkata",
           day: "2-digit",
-          month: "short",
+          month: "long",
           year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
+          hour12: true,
         }
       );
     };

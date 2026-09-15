@@ -1014,8 +1014,9 @@ function formatDate(
   return date.toLocaleDateString(
     "en-IN",
     {
+      timeZone: "Asia/Kolkata",
       day: "2-digit",
-      month: "short",
+      month: "long",
       year: "numeric",
     }
   );
@@ -1025,10 +1026,12 @@ function formatTime(
   date
 ) {
   return date.toLocaleTimeString(
-    "en-IN",
+    "en-US",
     {
+      timeZone: "Asia/Kolkata",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     }
   );
 }

@@ -11,6 +11,7 @@ const { recordAudit } = require("../services/audit.service");
 
 const {
   sendAppointmentConfirmationEmail,
+  sendNewAppointmentDoctorEmail,
   sendEmail,
   sendAppointmentCompletedEmail,
 } = require("../services/email.service");
@@ -831,46 +832,48 @@ const createAppointment = async (
      * ---------------------------------------------------
      */
 
+    let patientUser = null;
+    let doctorWithUser = null;
+
     try {
-      const patientUser =
+      patientUser =
         await User.findById(
           req.user.userId
         ).select(
           "name email"
         );
 
-      const doctorWithUser =
+      doctorWithUser =
         await Doctor.findById(
           doctor._id
         ).populate(
           "user",
           "name email"
         );
+    } catch (lookupError) {
+      console.error(
+        "Appointment email recipient lookup failed:",
+        lookupError.message
+      );
+    }
 
-      if (
-        patientUser?.email
-      ) {
-        await sendAppointmentConfirmationEmail(
-          {
-            patientName:
-              patientUser.name ||
-              "Patient",
-
-            patientEmail:
-              patientUser.email,
-
-            doctorName:
-              doctorWithUser
-                ?.user?.name ||
-              "Doctor",
-
-            appointmentDate:
-              appointment.appointmentDate,
-
-            tokenNumber:
-              appointment.tokenNumber,
-          }
-        );
+    // Patient confirmation is independent from the doctor notification.
+    try {
+      if (patientUser?.email) {
+        await sendAppointmentConfirmationEmail({
+          patientName:
+            patientUser.name ||
+            "Patient",
+          patientEmail:
+            patientUser.email,
+          doctorName:
+            doctorWithUser?.user?.name ||
+            "Doctor",
+          appointmentDate:
+            appointment.appointmentDate,
+          tokenNumber:
+            appointment.tokenNumber,
+        });
 
         console.log(
           `Appointment confirmation email sent to ${patientUser.email}`
@@ -883,6 +886,41 @@ const createAppointment = async (
     } catch (emailError) {
       console.error(
         "Appointment confirmation email failed:",
+        emailError.message
+      );
+    }
+
+    // Doctor notification is also best-effort and must never roll back the appointment.
+    try {
+      const doctorEmail =
+        doctorWithUser?.user?.email;
+
+      if (doctorEmail) {
+        await sendNewAppointmentDoctorEmail({
+          doctorName:
+            doctorWithUser?.user?.name ||
+            "Doctor",
+          doctorEmail,
+          patientName:
+            patientUser?.name ||
+            "Patient",
+          appointmentDate:
+            appointment.appointmentDate,
+          tokenNumber:
+            appointment.tokenNumber,
+        });
+
+        console.log(
+          `New appointment notification sent to doctor ${doctorEmail}`
+        );
+      } else {
+        console.warn(
+          "Doctor appointment email skipped: doctor email not found"
+        );
+      }
+    } catch (emailError) {
+      console.error(
+        "Doctor appointment email failed:",
         emailError.message
       );
     }

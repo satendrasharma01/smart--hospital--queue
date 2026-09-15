@@ -65,6 +65,7 @@ const Appointment = require("./models/Appointment");
 const Doctor = require("./models/Doctor");
 const { startMissedAppointmentWorker } = require("./services/missedAppointment.service");
 const Patient = require("./models/Patient");
+const { verifyEmailTransporter } = require("./services/email.service");
 
 // =====================================================
 // APP INITIALIZATION
@@ -462,6 +463,17 @@ server.on("error", (error) => {
 // =====================================================
 
 server.listen(PORT, () => {
+  verifyEmailTransporter()
+    .then(() => {
+      console.log("SMTP ready");
+    })
+    .catch((error) => {
+      console.error(
+        "SMTP not ready:",
+        error.message
+      );
+    });
+
   console.log("");
   console.log("==========================================");
 
