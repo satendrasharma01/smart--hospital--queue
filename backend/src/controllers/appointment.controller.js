@@ -579,7 +579,6 @@ const createAppointment = async (
      */
 
     let tokenNumber;
-    let recycledToken = false;
 
     for (
       let attempt = 0;
@@ -619,7 +618,6 @@ const createAppointment = async (
 
         if (claimed) {
           tokenNumber = candidate;
-          recycledToken = true;
           break;
         }
       }
@@ -740,11 +738,35 @@ const createAppointment = async (
       }
     } catch (error) {
       /*
-       * If a recycled token was claimed but appointment
-       * creation failed, return it to the recycle pool.
+       * The token was removed from QueueCounter before the
+       * appointment/QueueEntry pair was persisted. If creation
+       * fails, the token must never be lost -- regardless of
+       * whether it came from the recycle pool or from lastToken.
+       *
+       * Check for an active appointment first so a late/ambiguous
+       * database error cannot put a token back into the pool while
+       * an active appointment is actually using it.
        */
+      let tokenIsInUse = false;
 
-      if (recycledToken) {
+      if (tokenNumber) {
+        tokenIsInUse = Boolean(
+          await Appointment.exists({
+            doctor: doctor._id,
+            tokenDate: startOfDay,
+            tokenNumber,
+            status: {
+              $in: [
+                "booked",
+                "waiting",
+                "in-progress",
+              ],
+            },
+          })
+        );
+      }
+
+      if (tokenNumber && !tokenIsInUse) {
         await QueueCounter.findOneAndUpdate(
           {
             doctor: doctor._id,
@@ -752,9 +774,12 @@ const createAppointment = async (
           },
           {
             $addToSet: {
-              availableTokens:
-                tokenNumber,
+              availableTokens: tokenNumber,
             },
+          },
+          {
+            upsert: true,
+            setDefaultsOnInsert: true,
           }
         );
       }
