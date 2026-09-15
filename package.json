@@ -1,10 +1,14 @@
 {
   "name": "smart--hospital--queue",
   "version": "1.0.0",
-  "description": "",
+  "description": "Production-oriented full-stack hospital appointment and real-time queue management system.",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "test": "npm test --prefix backend",
+    "lint": "npm run lint --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "check:backend": "node scripts/check-backend-syntax.js"
   },
   "keywords": [],
   "author": "",
@@ -12,5 +16,9 @@
   "type": "commonjs",
   "devDependencies": {
     "concurrently": "^10.0.4"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
   }
 }

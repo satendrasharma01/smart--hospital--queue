@@ -1,16 +1,40 @@
-# React + Vite
+# Smart Hospital Queue System — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React/Vite frontend for the Smart Hospital Queue System.
 
-Currently, two official plugins are available:
+## Responsibilities
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Patient, doctor and administrator experiences
+- Authentication/session restoration through the backend
+- Appointment discovery and booking
+- Queue/token visibility and real-time updates
+- Doctor availability and profile management
+- Patient medical-record access according to backend authorization
+- Responsive dashboards, loading states, empty states and error handling
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Create `frontend/.env` from `.env.example`:
 
-## Expanding the Oxlint configuration
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_SOCKET_URL=http://localhost:5000
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Install and run:
+
+```bash
+npm ci
+npm run dev
+```
+
+## Validation
+
+```bash
+npm run lint
+npm run build
+```
+
+The frontend never treats local mock data as the source of operational hospital
+state. Appointment, doctor, patient and queue information is retrieved from
+the backend API and real-time Socket.IO events.
