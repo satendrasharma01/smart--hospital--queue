@@ -19,6 +19,12 @@ import {
 
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import {
+  formatAppointmentDate,
+  getHospitalDateKeyFromInstant,
+  getHospitalDayNameFromDateKey,
+  getHospitalDateParts,
+} from "../../utils/dateTime";
 
 function BookAppointment() {
   const { doctorId } = useParams();
@@ -271,53 +277,11 @@ function BookAppointment() {
    * =====================================================
    */
 
-  const formatDateKey = (
-    date
-  ) => {
-    const year =
-      date.getFullYear();
+  const getTodayDate = () =>
+    getHospitalDateKeyFromInstant(new Date());
 
-    const month = String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
-
-    const day = String(
-      date.getDate()
-    ).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-  };
-
-  const getTodayDate = () => {
-    return formatDateKey(
-      new Date()
-    );
-  };
-
-  const getDayName = (
-    dateString
-  ) => {
-    const date = new Date(
-      `${dateString}T00:00:00`
-    );
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "";
-    }
-
-    return date
-      .toLocaleDateString(
-        "en-US",
-        {
-          weekday: "long",
-        }
-      )
-      .toLowerCase();
-  };
+  const getDayName = (dateString) =>
+    getHospitalDayNameFromDateKey(dateString);
 
   /*
    * =====================================================
@@ -334,8 +298,11 @@ function BookAppointment() {
         return "";
       }
 
+      const todayKey =
+        getTodayDate();
+
       const today =
-        new Date();
+        new Date(`${todayKey}T12:00:00Z`);
 
       for (
         let i = 0;
@@ -345,23 +312,15 @@ function BookAppointment() {
         const date =
           new Date(today);
 
-        date.setDate(
-          today.getDate() + i
+        date.setUTCDate(
+          today.getUTCDate() + i
         );
 
         const dateKey =
-          formatDateKey(date);
+          date.toISOString().slice(0, 10);
 
         const dayName =
-          date
-            .toLocaleDateString(
-              "en-US",
-              {
-                weekday:
-                  "long",
-              }
-            )
-            .toLowerCase();
+          getDayName(dateKey);
 
         if (
           availableDayNames.includes(
@@ -641,7 +600,7 @@ function BookAppointment() {
               )
             ) {
               const dateKey =
-                formatDateKey(
+                getHospitalDateKeyFromInstant(
                   date
                 );
 
@@ -705,11 +664,11 @@ function BookAppointment() {
     }
 
     const now =
-      new Date();
+      getHospitalDateParts(new Date());
 
     const currentMinutes =
-      now.getHours() * 60 +
-      now.getMinutes();
+      now.hour * 60 +
+      now.minute;
 
     const selectedMinutes =
       timeToMinutes(time);
@@ -778,18 +737,10 @@ function BookAppointment() {
    */
 
   const isDateAvailable = (
-    date
+    dateKey
   ) => {
     const dayName =
-      date
-        .toLocaleDateString(
-          "en-US",
-          {
-            weekday:
-              "long",
-          }
-        )
-        .toLowerCase();
+      getDayName(dateKey);
 
     return availableDayNames.includes(
       dayName
@@ -877,9 +828,7 @@ function BookAppointment() {
       }
 
       const date =
-        new Date(
-          `${value}T00:00:00`
-        );
+        new Date(`${value}T12:00:00+05:30`);
 
       if (
         Number.isNaN(
@@ -894,17 +843,13 @@ function BookAppointment() {
       }
 
       if (
-        !isDateAvailable(date)
+        !isDateAvailable(value)
       ) {
         setSelectedDate("");
 
         setError(
-          `Doctor is not available on ${date.toLocaleDateString(
-            "en-US",
-            {
-              weekday:
-                "long",
-            }
+          `Doctor is not available on ${getDayName(
+            value
           )}. Please choose an available day.`
         );
 
@@ -986,16 +931,7 @@ function BookAppointment() {
       return;
     }
 
-    const selectedDateObject =
-      new Date(
-        `${selectedDate}T00:00:00`
-      );
-
-    if (
-      !isDateAvailable(
-        selectedDateObject
-      )
-    ) {
+    if (!isDateAvailable(selectedDate)) {
       setError(
         "The doctor is not available on the selected day."
       );
@@ -1514,15 +1450,11 @@ function BookAppointment() {
                     </p>
 
                     <p className="mt-1 text-sm font-semibold text-slate-900">
-                      {new Date(
-                        `${selectedDate}T00:00:00`
-                      ).toLocaleDateString(
-                        "en-US",
+                      {formatAppointmentDate(
+                        `${selectedDate}T12:00:00+05:30`,
                         {
-                          weekday:
-                            "long",
-                          month:
-                            "long",
+                          weekday: "long",
+                          month: "long",
                           day: "numeric",
                           year: "numeric",
                         }

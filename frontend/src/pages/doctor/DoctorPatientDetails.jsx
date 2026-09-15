@@ -13,6 +13,10 @@ import {
 import { Link, useParams } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import {
+  formatAppointmentDate,
+  formatAppointmentTime,
+} from "../../utils/dateTime";
 
 function DoctorPatientDetails() {
   const { patientId } = useParams();
@@ -842,7 +846,11 @@ function DoctorPatientDetails() {
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="font-medium text-slate-900">
-                            {date.toLocaleDateString()}
+                            {formatAppointmentDate(date, {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
                           </p>
 
                           <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
@@ -850,14 +858,7 @@ function DoctorPatientDetails() {
                               size={14}
                             />
 
-                            {date.toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute:
-                                  "2-digit",
-                              }
-                            )}
+                            {formatAppointmentTime(date)}
                           </p>
                         </div>
 

@@ -12,6 +12,10 @@ import { useAuth } from "../../context/AuthContext";
 import socket from "../../services/socket";
 
 import PatientSidebar from "../../components/PatientSidebar";
+import {
+  formatAppointmentDate,
+  formatAppointmentTime,
+} from "../../utils/dateTime";
 
 function PatientAppointments() {
   const { token } = useAuth();
@@ -451,8 +455,7 @@ function AppointmentCard({
           </p>
 
           <p className="mt-1 text-sm font-medium text-slate-900">
-            {appointmentDate.toLocaleDateString("en-IN", {
-              timeZone: "Asia/Kolkata",
+            {formatAppointmentDate(appointmentDate, {
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
@@ -467,12 +470,7 @@ function AppointmentCard({
           </p>
 
           <p className="mt-1 text-sm font-medium text-slate-900">
-            {appointmentDate.toLocaleTimeString("en-US", {
-              timeZone: "Asia/Kolkata",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            })}
+            {formatAppointmentTime(appointmentDate)}
           </p>
         </div>
       </div>
