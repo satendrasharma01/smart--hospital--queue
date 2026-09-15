@@ -465,11 +465,11 @@ server.on("error", (error) => {
 server.listen(PORT, () => {
   verifyEmailTransporter()
     .then(() => {
-      console.log("SMTP ready");
+      console.log("Email provider ready");
     })
     .catch((error) => {
       console.error(
-        "SMTP not ready:",
+        "Email provider not ready:",
         error.message
       );
     });

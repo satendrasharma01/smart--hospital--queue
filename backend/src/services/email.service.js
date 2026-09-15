@@ -1,4 +1,5 @@
-const nodemailer = require("nodemailer");
+const https = require("https");
+const crypto = require("crypto");
 
 const HOSPITAL_TIMEZONE = "Asia/Kolkata";
 
@@ -18,16 +19,9 @@ const escapeHtml = (value) =>
  */
 
 const formatHospitalDate = (value) => {
-  if (!value) {
-    return "—";
-  }
-
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
+  if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleDateString("en-IN", {
     timeZone: HOSPITAL_TIMEZONE,
     day: "2-digit",
@@ -37,16 +31,9 @@ const formatHospitalDate = (value) => {
 };
 
 const formatHospitalTime = (value) => {
-  if (!value) {
-    return "—";
-  }
-
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
+  if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleTimeString("en-IN", {
     timeZone: HOSPITAL_TIMEZONE,
     hour: "2-digit",
@@ -56,16 +43,9 @@ const formatHospitalTime = (value) => {
 };
 
 const formatHospitalDateTime = (value) => {
-  if (!value) {
-    return "—";
-  }
-
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
+  if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleString("en-IN", {
     timeZone: HOSPITAL_TIMEZONE,
     day: "2-digit",
@@ -79,152 +59,251 @@ const formatHospitalDateTime = (value) => {
 
 /*
  * =====================================================
- * SMTP CONFIGURATION
- * =====================================================
- */
-
-const smtpHost = process.env.SMTP_HOST;
-
-const smtpPort = Number(
-  process.env.SMTP_PORT || 465
-);
-
-const smtpSecure =
-  process.env.SMTP_SECURE === "true" ||
-  smtpPort === 465;
-
-const smtpUser = process.env.SMTP_USER;
-
-const smtpPassword =
-  process.env.SMTP_PASSWORD;
-
-const mailFrom =
-  process.env.MAIL_FROM || smtpUser;
-
-/*
- * Never print password.
- */
-
-console.log("SMTP configuration loaded:", {
-  host: smtpHost,
-  port: smtpPort,
-  secure: smtpSecure,
-  user: smtpUser || "NOT_CONFIGURED",
-  passwordConfigured: Boolean(
-    smtpPassword
-  ),
-  from: mailFrom || "NOT_CONFIGURED",
-});
-
-if (!smtpHost) {
-  console.warn(
-    "WARNING: SMTP_HOST is not configured."
-  );
-}
-
-if (!smtpUser || !smtpPassword) {
-  console.warn(
-    "WARNING: SMTP_USER or SMTP_PASSWORD is not configured."
-  );
-}
-
-/*
- * =====================================================
- * NODEMAILER TRANSPORTERS
+ * GMAIL API CONFIGURATION
  * =====================================================
  *
- * Render can time out on implicit TLS/SMTP port 465 for some
- * deployments. Gmail also supports authenticated STARTTLS on 587.
- * Prefer 587 for Gmail when the old 465 configuration is present,
- * while retaining 465 as a fallback.
+ * Render Free Web Services cannot use outbound SMTP ports.
+ * Use Gmail's HTTPS API instead. The Gmail account remains the
+ * sender (GMAIL_USER), so existing email content and callers do
+ * not need to change.
+ *
+ * Required production variables:
+ *   GMAIL_CLIENT_ID
+ *   GMAIL_CLIENT_SECRET
+ *   GMAIL_REFRESH_TOKEN
+ *   GMAIL_USER
  */
 
-const configuredTransportOptions = {
-  host: smtpHost,
-  auth: {
-    user: smtpUser,
-    pass: smtpPassword,
-  },
-};
+const gmailClientId = process.env.GMAIL_CLIENT_ID;
+const gmailClientSecret = process.env.GMAIL_CLIENT_SECRET;
+const gmailRefreshToken = process.env.GMAIL_REFRESH_TOKEN;
+const gmailUser =
+  process.env.GMAIL_USER ||
+  process.env.SMTP_USER;
 
-const transportOptions = [];
-
-if (smtpHost) {
-  const isGmail = /(^|\\.)gmail\\.com$/i.test(String(smtpHost));
-
-  if (isGmail && smtpPort === 465) {
-    transportOptions.push({
-      ...configuredTransportOptions,
-      port: 587,
-      secure: false,
-      requireTLS: true,
-    });
-  }
-
-  transportOptions.push({
-    ...configuredTransportOptions,
-    port: smtpPort,
-    secure: smtpSecure,
-  });
-}
-
-const transporters = transportOptions.map((options) =>
-  nodemailer.createTransport({
-    ...options,
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 12000,
-  })
+const gmailConfigured = Boolean(
+  gmailClientId &&
+  gmailClientSecret &&
+  gmailRefreshToken &&
+  gmailUser
 );
 
-let activeTransporter = transporters[0] || null;
+console.log("Gmail API configuration loaded:", {
+  configured: gmailConfigured,
+  user: gmailUser || "NOT_CONFIGURED",
+  clientIdConfigured: Boolean(gmailClientId),
+  clientSecretConfigured: Boolean(gmailClientSecret),
+  refreshTokenConfigured: Boolean(gmailRefreshToken),
+});
 
 /*
- * =====================================================
- * VERIFY SMTP
- * =====================================================
+ * Exchange the long-lived refresh token for a short-lived
+ * Gmail API access token. No OAuth client library is required.
  */
 
-const verifyEmailTransporter = async () => {
-  if (!smtpHost) {
-    throw new Error("SMTP_HOST is not configured");
-  }
-
-  if (!smtpUser || !smtpPassword) {
-    throw new Error("SMTP credentials are not configured");
-  }
-
-  let lastError;
-
-  for (let index = 0; index < transporters.length; index += 1) {
-    const currentTransporter = transporters[index];
-    const currentOptions = transportOptions[index];
-
-    try {
-      await currentTransporter.verify();
-      activeTransporter = currentTransporter;
-
-      console.log("SMTP transporter verified successfully:", {
-        host: currentOptions.host,
-        port: currentOptions.port,
-        secure: currentOptions.secure,
-      });
-
-      return true;
-    } catch (error) {
-      lastError = error;
-      console.error("SMTP transporter verification failed:", {
-        host: currentOptions.host,
-        port: currentOptions.port,
-        code: error.code,
-        command: error.command,
-        message: error.message,
-      });
+const getGmailAccessToken = () =>
+  new Promise((resolve, reject) => {
+    if (!gmailClientId || !gmailClientSecret || !gmailRefreshToken) {
+      return reject(
+        new Error(
+          "Gmail API credentials are not fully configured"
+        )
+      );
     }
+
+    const body = new URLSearchParams({
+      client_id: gmailClientId,
+      client_secret: gmailClientSecret,
+      refresh_token: gmailRefreshToken,
+      grant_type: "refresh_token",
+    }).toString();
+
+    const request = https.request(
+      {
+        hostname: "oauth2.googleapis.com",
+        path: "/token",
+        method: "POST",
+        timeout: 10000,
+        headers: {
+          "Content-Type":
+            "application/x-www-form-urlencoded",
+          "Content-Length": Buffer.byteLength(body),
+        },
+      },
+      (response) => {
+        let data = "";
+
+        response.setEncoding("utf8");
+
+        response.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        response.on("end", () => {
+          let parsed;
+
+          try {
+            parsed = JSON.parse(data);
+          } catch {
+            return reject(
+              new Error(
+                `Google token endpoint returned invalid JSON (HTTP ${response.statusCode})`
+              )
+            );
+          }
+
+          if (
+            response.statusCode < 200 ||
+            response.statusCode >= 300 ||
+            !parsed.access_token
+          ) {
+            return reject(
+              new Error(
+                `Google token refresh failed (HTTP ${response.statusCode}): ${
+                  parsed.error_description ||
+                  parsed.error ||
+                  "unknown error"
+                }`
+              )
+            );
+          }
+
+          resolve(parsed.access_token);
+        });
+      }
+    );
+
+    request.on("timeout", () => {
+      request.destroy(
+        new Error("Google token request timed out")
+      );
+    });
+
+    request.on("error", reject);
+    request.write(body);
+    request.end();
+  });
+
+/*
+ * Gmail expects a base64url-encoded RFC 2822/MIME message.
+ * Headers are encoded as UTF-8 MIME words when non-ASCII occurs.
+ */
+
+const encodeHeader = (value) => {
+  const stringValue = String(value ?? "");
+
+  if (/^[\x20-\x7E]*$/.test(stringValue)) {
+    return stringValue;
   }
 
-  throw lastError || new Error("SMTP transporter verification failed");
+  return `=?UTF-8?B?${Buffer.from(stringValue, "utf8").toString(
+    "base64"
+  )}?=`;
 };
+
+const createMimeMessage = ({
+  from,
+  to,
+  subject,
+  html,
+}) => {
+  const message = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${encodeHeader(subject)}`,
+    "MIME-Version: 1.0",
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    html,
+  ].join("\r\n");
+
+  return message;
+};
+
+const base64UrlEncode = (value) =>
+  Buffer.from(value, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+
+/*
+ * Send a MIME message through Gmail's HTTPS API.
+ */
+
+const sendGmailMessage = ({
+  accessToken,
+  rawMessage,
+}) =>
+  new Promise((resolve, reject) => {
+    const body = JSON.stringify({
+      raw: base64UrlEncode(rawMessage),
+    });
+
+    const request = https.request(
+      {
+        hostname: "gmail.googleapis.com",
+        path: `/gmail/v1/users/${encodeURIComponent(
+          "me"
+        )}/messages/send`,
+        method: "POST",
+        timeout: 10000,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+        },
+      },
+      (response) => {
+        let data = "";
+
+        response.setEncoding("utf8");
+
+        response.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        response.on("end", () => {
+          let parsed;
+
+          try {
+            parsed = data ? JSON.parse(data) : {};
+          } catch {
+            parsed = {};
+          }
+
+          if (
+            response.statusCode < 200 ||
+            response.statusCode >= 300
+          ) {
+            const detail =
+              parsed?.error?.message ||
+              `HTTP ${response.statusCode}`;
+
+            const error = new Error(
+              `Gmail API send failed: ${detail}`
+            );
+
+            error.statusCode = response.statusCode;
+            return reject(error);
+          }
+
+          resolve(parsed);
+        });
+      }
+    );
+
+    request.on("timeout", () => {
+      request.destroy(
+        new Error("Gmail API send request timed out")
+      );
+    });
+
+    request.on("error", reject);
+    request.write(body);
+    request.end();
+  });
 
 /*
  * =====================================================
@@ -232,63 +311,83 @@ const verifyEmailTransporter = async () => {
  * =====================================================
  */
 
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({
+  to,
+  subject,
+  html,
+}) => {
   if (!to) {
     throw new Error("Recipient email is required");
   }
 
-  if (!smtpHost) {
-    throw new Error("SMTP_HOST is not configured");
+  if (!gmailConfigured) {
+    throw new Error(
+      "Gmail API is not configured. Set GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN and GMAIL_USER."
+    );
   }
 
-  if (!smtpUser || !smtpPassword) {
-    throw new Error("SMTP credentials are not configured");
-  }
+  const accessToken =
+    await getGmailAccessToken();
 
-  if (!mailFrom) {
-    throw new Error("MAIL_FROM is not configured");
-  }
+  const rawMessage =
+    createMimeMessage({
+      from: `Smart Hospital <${gmailUser}>`,
+      to,
+      subject,
+      html,
+    });
 
-  if (!transporters.length) {
-    throw new Error("SMTP transporter is not configured");
-  }
-
-  let lastError;
-  const orderedTransporters = [
-    activeTransporter,
-    ...transporters.filter((item) => item !== activeTransporter),
-  ].filter(Boolean);
-
-  for (const currentTransporter of orderedTransporters) {
-    try {
-      const info = await currentTransporter.sendMail({
-        from: mailFrom,
-        to,
-        subject,
-        html,
+  try {
+    const info =
+      await sendGmailMessage({
+        accessToken,
+        rawMessage,
       });
 
-      activeTransporter = currentTransporter;
+    console.log("Email sent successfully:", {
+      messageId: info.id,
+      to,
+      subject,
+      provider: "gmail-api",
+    });
 
-      console.log("Email sent successfully:", {
-        messageId: info.messageId,
-        to,
-        subject,
-      });
+    return info;
+  } catch (error) {
+    console.error("Gmail API email sending failed:", {
+      code: error.code,
+      statusCode: error.statusCode,
+      message: error.message,
+      to,
+      subject,
+    });
 
-      return info;
-    } catch (error) {
-      lastError = error;
-      console.error("Email sending attempt failed:", {
-        code: error.code,
-        command: error.command,
-        response: error.response,
-        message: error.message,
-      });
-    }
+    throw error;
+  }
+};
+
+/*
+ * =====================================================
+ * VERIFY EMAIL PROVIDER
+ * =====================================================
+ *
+ * This verifies that the configured refresh token can be exchanged
+ * for an access token. It does NOT send a test email.
+ */
+
+const verifyEmailTransporter = async () => {
+  if (!gmailConfigured) {
+    throw new Error(
+      "Gmail API is not configured. Set GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN and GMAIL_USER."
+    );
   }
 
-  throw lastError || new Error("Email sending failed");
+  await getGmailAccessToken();
+
+  console.log("Gmail API authentication verified:", {
+    user: gmailUser,
+  });
+
+  return true;
 };
 
 /*

@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "test": "node --test tests/unit/dateTime.test.js tests/unit/email.test.js tests/unit/mfa.test.js tests/unit/doctor.test.js tests/unit/appointmentIndexes.test.js",
     "migrate:queue-token-index": "node scripts/migrate-queue-token-index.js",
-    "migrate:appointment-indexes": "node scripts/migrate-appointment-indexes.js"
+    "migrate:appointment-indexes": "node scripts/migrate-appointment-indexes.js",
+    "gmail:authorize": "node scripts/gmail-authorize.js"
   },
   "keywords": [],
   "author": "",
