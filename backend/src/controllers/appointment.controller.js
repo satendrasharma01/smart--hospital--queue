@@ -273,10 +273,14 @@ const createAppointment = async (
       });
     }
 
-    if (doctor.lifecycleStatus && doctor.lifecycleStatus !== "active") {
+    if (
+      doctor.lifecycleStatus &&
+      doctor.lifecycleStatus !== "active"
+    ) {
       return res.status(409).json({
         success: false,
-        message: "This doctor is not accepting new appointments",
+        message:
+          "This doctor is not accepting new appointments",
       });
     }
 
@@ -566,90 +570,118 @@ const createAppointment = async (
      * ATOMIC QUEUE TOKEN
      * ---------------------------------------------------
      *
-     * One counter per:
-     *
-     * doctor + hospital calendar date
+     * Reuse the lowest cancelled token first.
+     * If no recycled token is available, atomically
+     * increment the counter.
      */
 
-    let queueCounter;
+    let tokenNumber;
+    let recycledToken = false;
 
-    try {
-      queueCounter =
-        await QueueCounter.findOneAndUpdate(
-          {
-            doctor: doctor._id,
-            queueDate,
-          },
+    for (
+      let attempt = 0;
+      attempt < 3 && !tokenNumber;
+      attempt += 1
+    ) {
+      const counter =
+        await QueueCounter.findOne({
+          doctor: doctor._id,
+          queueDate,
+        }).lean();
 
-          {
-            $inc: {
-              lastToken: 1,
-            },
+      const available =
+        Array.isArray(counter?.availableTokens)
+          ? [...counter.availableTokens].sort(
+              (a, b) => a - b
+            )
+          : [];
 
-            $setOnInsert: {
+      for (const candidate of available) {
+        const claimed =
+          await QueueCounter.findOneAndUpdate(
+            {
               doctor: doctor._id,
               queueDate,
+              availableTokens: candidate,
             },
-          },
+            {
+              $pull: {
+                availableTokens: candidate,
+              },
+            },
+            {
+              returnDocument: "after",
+            }
+          );
 
-          {
-            upsert: true,
-            returnDocument: "after",
-            setDefaultsOnInsert: true,
-          }
-        );
-    } catch (counterError) {
-      /*
-       * Two simultaneous requests can race
-       * during creation of the unique counter.
-       *
-       * Retry once by incrementing the now-existing
-       * counter.
-       */
+        if (claimed) {
+          tokenNumber = candidate;
+          recycledToken = true;
+          break;
+        }
+      }
+    }
 
-      if (
-        counterError.code === 11000
-      ) {
+    if (!tokenNumber) {
+      let queueCounter;
+
+      try {
         queueCounter =
           await QueueCounter.findOneAndUpdate(
             {
               doctor: doctor._id,
               queueDate,
             },
-
             {
               $inc: {
                 lastToken: 1,
               },
+              $setOnInsert: {
+                doctor: doctor._id,
+                queueDate,
+              },
             },
-
             {
+              upsert: true,
               returnDocument: "after",
+              setDefaultsOnInsert: true,
             }
           );
-      } else {
-        throw counterError;
+      } catch (counterError) {
+        if (
+          counterError.code === 11000
+        ) {
+          queueCounter =
+            await QueueCounter.findOneAndUpdate(
+              {
+                doctor: doctor._id,
+                queueDate,
+              },
+              {
+                $inc: {
+                  lastToken: 1,
+                },
+              },
+              {
+                returnDocument: "after",
+              }
+            );
+        } else {
+          throw counterError;
+        }
       }
-    }
 
-    if (!queueCounter) {
-      queueCounter =
-        await QueueCounter.findOne({
-          doctor: doctor._id,
-          queueDate,
+      if (!queueCounter) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "Unable to generate queue token",
         });
-    }
+      }
 
-    if (!queueCounter) {
-      return res.status(500).json({
-        success: false,
-        message:
-          "Unable to generate queue token",
-      });
+      tokenNumber =
+        queueCounter.lastToken;
     }
-
-    const tokenNumber =
-      queueCounter.lastToken;
 
     /*
      * ---------------------------------------------------
@@ -685,19 +717,45 @@ const createAppointment = async (
 
           status: "booked",
         });
+
       try {
         await QueueEntry.create({
           doctor: doctor._id,
           queueDate,
-          appointment: appointment._id,
+          appointment:
+            appointment._id,
           tokenNumber,
-          status: appointment.status,
+          status:
+            appointment.status,
         });
       } catch (queueError) {
-        await Appointment.deleteOne({ _id: appointment._id });
+        await Appointment.deleteOne({
+          _id: appointment._id,
+        });
+
         throw queueError;
       }
     } catch (error) {
+      /*
+       * If a recycled token was claimed but appointment
+       * creation failed, return it to the recycle pool.
+       */
+
+      if (recycledToken) {
+        await QueueCounter.findOneAndUpdate(
+          {
+            doctor: doctor._id,
+            queueDate,
+          },
+          {
+            $addToSet: {
+              availableTokens:
+                tokenNumber,
+            },
+          }
+        );
+      }
+
       /*
        * MongoDB unique index protection.
        */
@@ -707,9 +765,10 @@ const createAppointment = async (
       ) {
         return res.status(409).json({
           success: false,
-          message: error.keyPattern?.patient
-            ? "You already have an active appointment with this doctor today."
-            : "This appointment slot was just booked by another patient. Please select another slot.",
+          message:
+            error.keyPattern?.patient
+              ? "You already have an active appointment with this doctor today."
+              : "This appointment slot was just booked by another patient. Please select another slot.",
         });
       }
 
@@ -718,11 +777,20 @@ const createAppointment = async (
 
     await recordAudit({
       req,
-      action: "appointment_created",
-      resourceType: "Appointment",
-      resourceId: appointment._id,
-      targetId: patient._id,
-      metadata: { doctorId: doctor._id, tokenDate: queueDate },
+      action:
+        "appointment_created",
+      resourceType:
+        "Appointment",
+      resourceId:
+        appointment._id,
+      targetId:
+        patient._id,
+      metadata: {
+        doctorId:
+          doctor._id,
+        tokenDate:
+          queueDate,
+      },
     });
 
     /*
@@ -893,7 +961,8 @@ const createAppointment = async (
 
     return res.status(500).json({
       success: false,
-      message: "Server error while booking appointment",
+      message:
+        "Server error while booking appointment",
     });
   }
 };
@@ -1056,21 +1125,83 @@ const cancelAppointment = async (
       });
     }
 
-    appointment.status = "cancelled";
-    appointment.cancellationReason = "patient";
+    appointment.status =
+      "cancelled";
+
+    appointment.cancellationReason =
+      "patient";
 
     await appointment.save();
+
     await QueueEntry.updateOne(
-      { appointment: appointment._id },
-      { $set: { status: "cancelled" } }
+      {
+        appointment:
+          appointment._id,
+      },
+      {
+        $set: {
+          status: "cancelled",
+        },
+      }
+    );
+
+    /*
+     * ---------------------------------------------------
+     * RETURN CANCELLED TOKEN TO QUEUE COUNTER
+     * ---------------------------------------------------
+     *
+     * The cancelled token is added back to the
+     * availableTokens pool.
+     *
+     * The next appointment for the same doctor
+     * and hospital date can reuse the lowest token.
+     */
+
+    const queueDate =
+      getHospitalDateKey(
+        appointment.appointmentDate
+      );
+
+    await QueueCounter.findOneAndUpdate(
+      {
+        doctor:
+          appointment.doctor,
+
+        queueDate,
+      },
+      {
+        $addToSet: {
+          availableTokens:
+            appointment.tokenNumber,
+        },
+
+        $setOnInsert: {
+          doctor:
+            appointment.doctor,
+
+          queueDate,
+        },
+      },
+      {
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
     );
 
     await recordAudit({
       req,
-      action: "appointment_cancelled",
-      resourceType: "Appointment",
-      resourceId: appointment._id,
-      targetId: appointment.patient,
+
+      action:
+        "appointment_cancelled",
+
+      resourceType:
+        "Appointment",
+
+      resourceId:
+        appointment._id,
+
+      targetId:
+        appointment.patient,
     });
 
     /*
@@ -1133,7 +1264,8 @@ const cancelAppointment = async (
           );
 
         await sendEmail({
-          to: patientUser.email,
+          to:
+            patientUser.email,
 
           subject:
             "Appointment Cancelled - Smart Hospital",

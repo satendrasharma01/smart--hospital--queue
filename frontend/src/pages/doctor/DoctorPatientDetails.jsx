@@ -347,31 +347,23 @@ function DoctorPatientDetails() {
    * =====================================================
    */
 
-  const formatDate = (
-    value
-  ) => {
+  const formatDate = (value) => {
     if (!value) {
       return "—";
     }
 
     const date = new Date(value);
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
+    if (Number.isNaN(date.getTime())) {
       return "—";
     }
 
-    return date.toLocaleDateString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
+    return date.toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   /*
@@ -380,33 +372,26 @@ function DoctorPatientDetails() {
    * =====================================================
    */
 
-  const formatDateTime = (
-    value
-  ) => {
+  const formatDateTime = (value) => {
     if (!value) {
       return "—";
     }
 
     const date = new Date(value);
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
+    if (Number.isNaN(date.getTime())) {
       return "—";
     }
 
-    return date.toLocaleString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    );
+    return date.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   return (
