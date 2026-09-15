@@ -107,7 +107,11 @@ appointmentSchema.index(
 
     partialFilterExpression: {
       status: {
-        $ne: "cancelled",
+        $in: [
+          "booked",
+          "waiting",
+          "in-progress",
+        ],
       },
     },
   }

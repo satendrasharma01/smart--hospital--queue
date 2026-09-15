@@ -147,3 +147,4 @@ export const getHospitalDateParts = (value = new Date()) => {
     minute: Number(result.minute),
   };
 };
+

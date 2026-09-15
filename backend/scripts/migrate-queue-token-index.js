@@ -12,7 +12,11 @@ const TARGET_KEYS = {
 
 const TARGET_PARTIAL = {
   status: {
-    $ne: "cancelled",
+    $in: [
+      "booked",
+      "waiting",
+      "in-progress",
+    ],
   },
 };
 
@@ -75,6 +79,7 @@ const migrate = async () => {
   await collection.createIndex(TARGET_KEYS, {
     unique: true,
     partialFilterExpression: TARGET_PARTIAL,
+    name: "unique_active_doctor_queue_token",
   });
 
   console.log(

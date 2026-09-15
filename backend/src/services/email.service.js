@@ -275,6 +275,7 @@ const sendAppointmentConfirmationEmail =
     patientName,
     patientEmail,
     doctorName,
+    departmentName,
     appointmentDate,
     tokenNumber,
   }) => {
@@ -333,6 +334,20 @@ const sendAppointmentConfirmationEmail =
                       doctorName
                     )}
                   </p>
+
+                  ${
+                    departmentName
+                      ? `
+                  <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                    Department
+                  </p>
+
+                  <p style="margin:0 0 18px;color:#0f172a;font-size:15px;">
+                    ${escapeHtml(departmentName)}
+                  </p>
+                  `
+                      : ""
+                  }
 
                   <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
                     Date

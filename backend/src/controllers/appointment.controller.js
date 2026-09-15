@@ -521,9 +521,10 @@ const createAppointment = async (
         },
 
         status: {
-          $nin: [
-            "cancelled",
-            "completed",
+          $in: [
+            "booked",
+            "waiting",
+            "in-progress",
           ],
         },
       });
@@ -551,9 +552,10 @@ const createAppointment = async (
         appointmentDate: date,
 
         status: {
-          $nin: [
-            "cancelled",
-            "completed",
+          $in: [
+            "booked",
+            "waiting",
+            "in-progress",
           ],
         },
       });
@@ -846,10 +848,15 @@ const createAppointment = async (
       doctorWithUser =
         await Doctor.findById(
           doctor._id
-        ).populate(
-          "user",
-          "name email"
-        );
+        )
+          .populate(
+            "user",
+            "name email"
+          )
+          .populate(
+            "department",
+            "name"
+          );
     } catch (lookupError) {
       console.error(
         "Appointment email recipient lookup failed:",
@@ -869,6 +876,9 @@ const createAppointment = async (
           doctorName:
             doctorWithUser?.user?.name ||
             "Doctor",
+          departmentName:
+            doctorWithUser?.department?.name ||
+            "",
           appointmentDate:
             appointment.appointmentDate,
           tokenNumber:
