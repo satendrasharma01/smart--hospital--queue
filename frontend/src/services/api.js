@@ -12,6 +12,13 @@ api.interceptors.request.use((config) => {
   } else {
     delete config.headers["Content-Type"];
   }
+
+  // Authentication is handled by the HttpOnly accessToken cookie.
+  // Do not send the legacy "session-cookie" placeholder as a Bearer token.
+  if (config.headers?.Authorization === "Bearer session-cookie") {
+    delete config.headers.Authorization;
+  }
+
   return config;
 });
 

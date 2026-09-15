@@ -3,7 +3,12 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const QRCode = require("qrcode");
 const Session = require("../models/Session");
-const { encryptSecret, decryptSecret, generateSecret, verifyTotp } = require("../utils/mfa");
+const {
+  encryptSecret,
+  decryptSecret,
+  generateSecret,
+  verifyTotp,
+} = require("../utils/mfa");
 
 const User = require("../models/User");
 const Doctor = require("../models/Doctor");
@@ -18,13 +23,21 @@ const { recordAudit } = require("../services/audit.service");
 const sessionCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 15 * 60 * 1000,
 };
-const refreshCookieOptions = { ...sessionCookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 };
-const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
+
+const refreshCookieOptions = {
+  ...sessionCookieOptions,
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+};
+
+const hashToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
 const verifyEncryptedTotp = (encryptedSecret, code) => {
   if (!encryptedSecret) return false;
+
   try {
     return verifyTotp(decryptSecret(encryptedSecret), code);
   } catch {
@@ -34,13 +47,31 @@ const verifyEncryptedTotp = (encryptedSecret, code) => {
 
 const issueSession = async (user) => {
   const refreshToken = crypto.randomBytes(48).toString("base64url");
+
   const session = await Session.create({
-    user: user._id, tokenHash: hashToken(refreshToken), familyId: crypto.randomUUID(),
+    user: user._id,
+    tokenHash: hashToken(refreshToken),
+    familyId: crypto.randomUUID(),
     expiresAt: new Date(Date.now() + refreshCookieOptions.maxAge),
   });
-  const accessToken = jwt.sign({ userId: user._id, role: user.role, sessionId: session._id },
-    process.env.JWT_SECRET, { expiresIn: "15m" });
-  return { accessToken, refreshToken, session };
+
+  const accessToken = jwt.sign(
+    {
+      userId: user._id,
+      role: user.role,
+      sessionId: session._id,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "15m",
+    }
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    session,
+  };
 };
 
 const registerUser = async (req, res) => {
@@ -128,7 +159,10 @@ const loginUser = async (req, res) => {
     }
 
     if (user.role === "doctor") {
-      const doctor = await Doctor.findOne({ user: user._id }).select("lifecycleStatus");
+      const doctor = await Doctor.findOne({
+        user: user._id,
+      }).select("lifecycleStatus");
+
       if (!doctor || doctor.lifecycleStatus !== "active") {
         return res.status(403).json({
           success: false,
@@ -150,23 +184,50 @@ const loginUser = async (req, res) => {
     }
 
     if (["doctor", "admin"].includes(user.role) && user.mfa?.enabled) {
-      const code = req.body.totpCode || req.body.otp || req.body.mfaCode;
+      const code =
+        req.body.totpCode ||
+        req.body.otp ||
+        req.body.mfaCode;
+
       if (!code || !verifyEncryptedTotp(user.mfa.secret, code)) {
-        await recordAudit({ req, action: "mfa_login_failed", resourceType: "User", resourceId: user._id, success: false });
-        return res.status(401).json({ success: false, message: "MFA verification required", mfaRequired: true });
+        await recordAudit({
+          req,
+          action: "mfa_login_failed",
+          resourceType: "User",
+          resourceId: user._id,
+          success: false,
+        });
+
+        return res.status(401).json({
+          success: false,
+          message: "MFA verification required",
+          mfaRequired: true,
+        });
       }
     }
 
     const { accessToken, refreshToken } = await issueSession(user);
 
-    res.cookie("accessToken", accessToken, sessionCookieOptions);
-    res.cookie("refreshToken", refreshToken, refreshCookieOptions);
+    res.cookie(
+      "accessToken",
+      accessToken,
+      sessionCookieOptions
+    );
+
+    res.cookie(
+      "refreshToken",
+      refreshToken,
+      refreshCookieOptions
+    );
+
     await recordAudit({
       req,
       action: "login",
       resourceType: "User",
       resourceId: user._id,
-      metadata: { role: user.role },
+      metadata: {
+        role: user.role,
+      },
     });
 
     res.status(200).json({
@@ -191,115 +252,372 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   const refreshToken = req.cookies?.refreshToken;
-  if (refreshToken) await Session.updateOne({ tokenHash: hashToken(refreshToken), revokedAt: { $exists: false } }, { $set: { revokedAt: new Date() } });
+
+  if (refreshToken) {
+    await Session.updateOne(
+      {
+        tokenHash: hashToken(refreshToken),
+        revokedAt: {
+          $exists: false,
+        },
+      },
+      {
+        $set: {
+          revokedAt: new Date(),
+        },
+      }
+    );
+  }
+
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    sameSite:
+      process.env.NODE_ENV === "production"
+        ? "none"
+        : "lax",
   });
-  res.clearCookie("refreshToken", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax" });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite:
+      process.env.NODE_ENV === "production"
+        ? "none"
+        : "lax",
+  });
+
   await recordAudit({
     req,
     action: "logout",
     resourceType: "User",
   });
-  return res.status(200).json({ success: true, message: "Logged out successfully" });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
 };
 
 const refreshSession = async (req, res) => {
-  const raw = req.cookies?.refreshToken || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.slice(7) : null);
-  if (!raw) return res.status(401).json({ success: false, message: "Refresh token required" });
+  const raw =
+    req.cookies?.refreshToken ||
+    (req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.slice(7)
+      : null);
+
+  if (!raw) {
+    return res.status(401).json({
+      success: false,
+      message: "Refresh token required",
+    });
+  }
+
   const currentHash = hashToken(raw);
+
   const session = await Session.findOneAndUpdate(
     {
       tokenHash: currentHash,
-      revokedAt: { $exists: false },
-      expiresAt: { $gt: new Date() },
+      revokedAt: {
+        $exists: false,
+      },
+      expiresAt: {
+        $gt: new Date(),
+      },
     },
-    { $set: { revokedAt: new Date(), lastUsedAt: new Date() } },
-    { new: false }
+    {
+      $set: {
+        revokedAt: new Date(),
+        lastUsedAt: new Date(),
+      },
+    },
+    {
+      new: false,
+    }
   );
+
   if (!session) {
-    const revokedSession = await Session.findOne({ tokenHash: currentHash }).select("familyId");
+    const revokedSession = await Session.findOne({
+      tokenHash: currentHash,
+    }).select("familyId");
+
     if (revokedSession?.familyId) {
       await Session.updateMany(
-        { familyId: revokedSession.familyId, revokedAt: { $exists: false } },
-        { $set: { revokedAt: new Date() } }
+        {
+          familyId: revokedSession.familyId,
+          revokedAt: {
+            $exists: false,
+          },
+        },
+        {
+          $set: {
+            revokedAt: new Date(),
+          },
+        }
       );
     }
-    return res.status(401).json({ success: false, message: "Invalid or expired refresh token" });
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired refresh token",
+    });
   }
-  const user = await User.findById(session.user).select("+mfa.secret +mfa.pendingSecret");
-  if (!user || user.accountStatus !== "active") return res.status(401).json({ success: false, message: "Invalid session" });
+
+  const user = await User.findById(session.user).select(
+    "+mfa.secret +mfa.pendingSecret"
+  );
+
+  if (!user || user.accountStatus !== "active") {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid session",
+    });
+  }
+
   if (user.role === "doctor") {
-    const doctor = await Doctor.findOne({ user: user._id }).select("lifecycleStatus");
+    const doctor = await Doctor.findOne({
+      user: user._id,
+    }).select("lifecycleStatus");
+
     if (!doctor || doctor.lifecycleStatus !== "active") {
       await Session.updateMany(
-        { user: user._id, revokedAt: { $exists: false } },
-        { $set: { revokedAt: new Date() } }
+        {
+          user: user._id,
+          revokedAt: {
+            $exists: false,
+          },
+        },
+        {
+          $set: {
+            revokedAt: new Date(),
+          },
+        }
       );
-      return res.status(401).json({ success: false, message: "Invalid session" });
+
+      return res.status(401).json({
+        success: false,
+        message: "Invalid session",
+      });
     }
   }
+
   const next = await issueSession(user);
-  await Session.updateOne({ _id: session._id }, { $set: { revokedAt: new Date(), replacedByHash: hashToken(next.refreshToken) } });
-  await recordAudit({ req, action: "session_rotated", resourceType: "Session", resourceId: session._id, targetId: user._id });
-  res.cookie("accessToken", next.accessToken, sessionCookieOptions);
-  res.cookie("refreshToken", next.refreshToken, refreshCookieOptions);
-  return res.status(200).json({ success: true, message: "Session refreshed" });
+
+  await Session.updateOne(
+    {
+      _id: session._id,
+    },
+    {
+      $set: {
+        revokedAt: new Date(),
+        replacedByHash: hashToken(next.refreshToken),
+      },
+    }
+  );
+
+  await recordAudit({
+    req,
+    action: "session_rotated",
+    resourceType: "Session",
+    resourceId: session._id,
+    targetId: user._id,
+  });
+
+  res.cookie(
+    "accessToken",
+    next.accessToken,
+    sessionCookieOptions
+  );
+
+  res.cookie(
+    "refreshToken",
+    next.refreshToken,
+    refreshCookieOptions
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Session refreshed",
+  });
 };
 
 const setupMfa = async (req, res) => {
   if (!["doctor", "admin"].includes(req.user.role)) {
-    return res.status(403).json({ success: false, message: "MFA is available only for doctors and administrators" });
+    return res.status(403).json({
+      success: false,
+      message:
+        "MFA is available only for doctors and administrators",
+    });
   }
-  const user = await User.findById(req.user.userId).select("+mfa.secret +mfa.pendingSecret");
-  if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+  const user = await User.findById(req.user.userId).select(
+    "+mfa.secret +mfa.pendingSecret"
+  );
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
   const secret = generateSecret();
+
   user.mfa.pendingSecret = encryptSecret(secret);
+
   await user.save();
-  await recordAudit({ req, action: "mfa_setup_started", resourceType: "User", resourceId: user._id });
-  const label = encodeURIComponent(`Smart Hospital:${user.email}`);
-  const otpauthUrl = `otpauth://totp/${label}?secret=${secret}&issuer=Smart%20Hospital`;
+
+  await recordAudit({
+    req,
+    action: "mfa_setup_started",
+    resourceType: "User",
+    resourceId: user._id,
+  });
+
+  const label = encodeURIComponent(
+    `Smart Hospital:${user.email}`
+  );
+
+  const otpauthUrl =
+    `otpauth://totp/${label}?secret=${secret}&issuer=Smart%20Hospital`;
+
   const qrCode = await QRCode.toDataURL(otpauthUrl);
-  return res.json({ success: true, secret, otpauthUrl, qrCode });
+
+  return res.json({
+    success: true,
+    secret,
+    otpauthUrl,
+    qrCode,
+  });
 };
 
 const verifyMfa = async (req, res) => {
   if (!["doctor", "admin"].includes(req.user.role)) {
-    return res.status(403).json({ success: false, message: "MFA is available only for doctors and administrators" });
+    return res.status(403).json({
+      success: false,
+      message:
+        "MFA is available only for doctors and administrators",
+    });
   }
-  const user = await User.findById(req.user.userId).select("+mfa.secret +mfa.pendingSecret");
-  const code = req.body.code || req.body.totpCode || req.body.otp;
-  if (!user?.mfa?.pendingSecret || !verifyEncryptedTotp(user.mfa.pendingSecret, code)) {
-    await recordAudit({ req, action: "mfa_setup_failed", resourceType: "User", resourceId: user?._id, success: false });
-    return res.status(400).json({ success: false, message: "Invalid MFA code" });
+
+  const user = await User.findById(req.user.userId).select(
+    "+mfa.secret +mfa.pendingSecret"
+  );
+
+  const code =
+    req.body.code ||
+    req.body.totpCode ||
+    req.body.otp;
+
+  if (
+    !user?.mfa?.pendingSecret ||
+    !verifyEncryptedTotp(
+      user.mfa.pendingSecret,
+      code
+    )
+  ) {
+    await recordAudit({
+      req,
+      action: "mfa_setup_failed",
+      resourceType: "User",
+      resourceId: user?._id,
+      success: false,
+    });
+
+    return res.status(400).json({
+      success: false,
+      message: "Invalid MFA code",
+    });
   }
+
   user.mfa.secret = user.mfa.pendingSecret;
   user.mfa.pendingSecret = "";
   user.mfa.enabled = true;
   user.mfa.verifiedAt = new Date();
+
   await user.save();
-  await recordAudit({ req, action: "mfa_enabled", resourceType: "User", resourceId: user._id });
-  return res.json({ success: true, message: "MFA enabled" });
+
+  await recordAudit({
+    req,
+    action: "mfa_enabled",
+    resourceType: "User",
+    resourceId: user._id,
+  });
+
+  return res.json({
+    success: true,
+    message: "MFA enabled",
+  });
 };
 
 const disableMfa = async (req, res) => {
   if (!["doctor", "admin"].includes(req.user.role)) {
-    return res.status(403).json({ success: false, message: "MFA is available only for doctors and administrators" });
+    return res.status(403).json({
+      success: false,
+      message:
+        "MFA is available only for doctors and administrators",
+    });
   }
-  const user = await User.findById(req.user.userId).select("+mfa.secret +mfa.pendingSecret");
-  if (!user) return res.status(404).json({ success: false, message: "User not found" });
-  const code = req.body.code || req.body.totpCode || req.body.otp;
-  const passwordValid = await bcrypt.compare(String(req.body.password || ""), user.password);
-  if (!user.mfa?.enabled || !passwordValid || !verifyEncryptedTotp(user.mfa.secret, code)) {
-    await recordAudit({ req, action: "mfa_disable_failed", resourceType: "User", resourceId: user._id, success: false });
-    return res.status(400).json({ success: false, message: "Invalid MFA code" });
+
+  const user = await User.findById(req.user.userId).select(
+    "+mfa.secret +mfa.pendingSecret"
+  );
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
   }
-  user.mfa = { enabled: false, secret: "", pendingSecret: "" };
+
+  const code =
+    req.body.code ||
+    req.body.totpCode ||
+    req.body.otp;
+
+  const passwordValid = await bcrypt.compare(
+    String(req.body.password || ""),
+    user.password
+  );
+
+  if (
+    !user.mfa?.enabled ||
+    !passwordValid ||
+    !verifyEncryptedTotp(user.mfa.secret, code)
+  ) {
+    await recordAudit({
+      req,
+      action: "mfa_disable_failed",
+      resourceType: "User",
+      resourceId: user._id,
+      success: false,
+    });
+
+    return res.status(400).json({
+      success: false,
+      message: "Invalid MFA code",
+    });
+  }
+
+  user.mfa = {
+    enabled: false,
+    secret: "",
+    pendingSecret: "",
+  };
+
   await user.save();
-  await recordAudit({ req, action: "mfa_disabled", resourceType: "User", resourceId: user._id });
-  return res.json({ success: true, message: "MFA disabled" });
+
+  await recordAudit({
+    req,
+    action: "mfa_disabled",
+    resourceType: "User",
+    resourceId: user._id,
+  });
+
+  return res.json({
+    success: true,
+    message: "MFA disabled",
+  });
 };
 
 /*
@@ -308,6 +626,7 @@ const disableMfa = async (req, res) => {
  * Always returns the same success message so that
  * attackers cannot discover whether an email is registered.
  */
+
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -339,7 +658,9 @@ const forgotPassword = async (req, res) => {
     });
 
     // Generate a secure random token.
-    const rawToken = crypto.randomBytes(32).toString("hex");
+    const rawToken = crypto
+      .randomBytes(32)
+      .toString("hex");
 
     // Only the hash is stored in MongoDB.
     const tokenHash = crypto
@@ -359,7 +680,8 @@ const forgotPassword = async (req, res) => {
     });
 
     const frontendUrl =
-      process.env.FRONTEND_URL || "http://localhost:5173";
+      process.env.FRONTEND_URL ||
+      "http://localhost:5173";
 
     const resetUrl =
       `${frontendUrl}/reset-password?token=${rawToken}`;
@@ -457,11 +779,15 @@ const forgotPassword = async (req, res) => {
         "If an account with this email exists, a password reset link has been sent.",
     });
   } catch (error) {
-    console.error("Forgot password error:", error);
+    console.error(
+      "Forgot password error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Server error while processing password reset",
+      message:
+        "Server error while processing password reset",
     });
   }
 };
@@ -469,6 +795,7 @@ const forgotPassword = async (req, res) => {
 /*
  * Reset Password
  */
+
 const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -476,14 +803,16 @@ const resetPassword = async (req, res) => {
     if (!token || !password) {
       return res.status(400).json({
         success: false,
-        message: "Reset token and new password are required",
+        message:
+          "Reset token and new password are required",
       });
     }
 
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 6 characters",
+        message:
+          "Password must be at least 6 characters",
       });
     }
 
@@ -492,12 +821,13 @@ const resetPassword = async (req, res) => {
       .update(token)
       .digest("hex");
 
-    const resetRecord = await PasswordResetToken.findOne({
-      tokenHash,
-      expiresAt: {
-        $gt: new Date(),
-      },
-    });
+    const resetRecord =
+      await PasswordResetToken.findOne({
+        tokenHash,
+        expiresAt: {
+          $gt: new Date(),
+        },
+      });
 
     if (!resetRecord) {
       return res.status(400).json({
@@ -507,7 +837,9 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    const user = await User.findById(resetRecord.user);
+    const user = await User.findById(
+      resetRecord.user
+    );
 
     if (!user) {
       await PasswordResetToken.deleteOne({
@@ -520,12 +852,25 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    user.password = await bcrypt.hash(password, 12);
+    user.password = await bcrypt.hash(
+      password,
+      12
+    );
 
     await user.save();
+
     await Session.updateMany(
-      { user: user._id, revokedAt: { $exists: false } },
-      { $set: { revokedAt: new Date() } }
+      {
+        user: user._id,
+        revokedAt: {
+          $exists: false,
+        },
+      },
+      {
+        $set: {
+          revokedAt: new Date(),
+        },
+      }
     );
 
     // One-time token: invalidate immediately.
@@ -539,11 +884,15 @@ const resetPassword = async (req, res) => {
         "Password reset successfully. You can now login with your new password.",
     });
   } catch (error) {
-    console.error("Reset password error:", error);
+    console.error(
+      "Reset password error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Server error while resetting password",
+      message:
+        "Server error while resetting password",
     });
   }
 };
