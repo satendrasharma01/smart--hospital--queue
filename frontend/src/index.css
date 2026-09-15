@@ -32,3 +32,53 @@ img, svg {
 button, a {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* =========================================================
+   RESPONSIVE APPLICATION SAFETY
+   Doctor + Patient portals
+   ========================================================= */
+
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+main,
+section,
+article,
+aside {
+  min-width: 0;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  max-width: 100%;
+}
+
+input,
+textarea,
+select {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  h1 {
+    overflow-wrap: anywhere;
+  }
+
+  p,
+  span,
+  label {
+    overflow-wrap: break-word;
+  }
+}
+

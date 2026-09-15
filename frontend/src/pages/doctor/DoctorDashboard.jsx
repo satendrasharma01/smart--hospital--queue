@@ -562,7 +562,7 @@ function DoctorDashboard() {
 
         {/* Main */}
 
-        <main className="mx-auto max-w-7xl px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           <div>
             <p className="text-sm text-slate-500">
               Doctor Portal

@@ -304,7 +304,7 @@ function PatientAppointments() {
 
       <main className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-6 py-7">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-7">
             <p className="text-sm text-slate-500">
               Patient Portal
             </p>
@@ -319,7 +319,7 @@ function PatientAppointments() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           {/* Error */}
           {error && (
             <div className="mb-4 rounded-lg border border-red-200 bg-white p-4">

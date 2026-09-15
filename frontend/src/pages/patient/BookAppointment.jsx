@@ -1105,7 +1105,7 @@ function BookAppointment() {
 
   if (!doctor) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 sm:px-6">
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
           <Stethoscope
             size={30}
@@ -1162,7 +1162,7 @@ function BookAppointment() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-4xl px-6 py-5">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-5">
           <button
             type="button"
             onClick={() =>
@@ -1179,7 +1179,7 @@ function BookAppointment() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-8">
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
         {/* PAGE HEADER */}
 
         <div>

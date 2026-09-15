@@ -202,7 +202,7 @@ function DoctorPatients() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           {/* Heading */}
 
           <div>

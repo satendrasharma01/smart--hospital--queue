@@ -376,7 +376,7 @@ function DoctorAvailability() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           <div>
             <p className="text-sm text-slate-500">
               Schedule management
@@ -461,7 +461,7 @@ function DoctorAvailability() {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label
                       htmlFor="startTime"

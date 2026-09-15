@@ -54,7 +54,7 @@ function PatientDoctorDetails() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 sm:px-6">
         <div className="rounded-xl border border-red-200 bg-white p-6 text-center">
           <p className="text-sm text-red-600">{error}</p>
 
@@ -82,7 +82,7 @@ function PatientDoctorDetails() {
 
       <main className="min-w-0 flex-1">
         <div className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-5xl px-6 py-6">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -94,7 +94,7 @@ function PatientDoctorDetails() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
           <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               {doctor.user?.profileImage?.url ? (

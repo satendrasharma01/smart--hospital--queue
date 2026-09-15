@@ -86,7 +86,7 @@ function PatientDoctors() {
 
       <main className="min-w-0 flex-1">
         <div className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-6 py-7">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-7">
             <p className="text-sm text-slate-500">
               Patient Portal
             </p>
@@ -101,7 +101,7 @@ function PatientDoctors() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           {/* Search */}
           <div className="relative max-w-xl">
             <Search

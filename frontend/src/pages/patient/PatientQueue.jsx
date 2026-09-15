@@ -423,7 +423,7 @@ function PatientQueue() {
 
       <main className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-5xl px-6 py-6">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6">
             <p className="text-sm text-slate-500">
               Patient Portal
             </p>
@@ -438,7 +438,7 @@ function PatientQueue() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
           {error && !queue ? (
             <EmptyQueue
               message={error}

@@ -381,7 +381,7 @@ function DoctorProfile() {
 
       <div className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-6xl px-6 py-6">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6">
             <p className="text-sm text-slate-500">
               Doctor Portal
             </p>
@@ -397,7 +397,7 @@ function DoctorProfile() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-6 py-8">
+        <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
           {error && (
             <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
               <p className="text-sm text-red-700">
