@@ -451,7 +451,12 @@ function AppointmentCard({
           </p>
 
           <p className="mt-1 text-sm font-medium text-slate-900">
-            {appointmentDate.toLocaleDateString()}
+            {appointmentDate.toLocaleDateString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
           </p>
         </div>
 
@@ -462,13 +467,12 @@ function AppointmentCard({
           </p>
 
           <p className="mt-1 text-sm font-medium text-slate-900">
-            {appointmentDate.toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}
+            {appointmentDate.toLocaleTimeString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })}
           </p>
         </div>
       </div>
