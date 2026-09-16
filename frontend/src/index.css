@@ -41,3 +41,14 @@ button, input, textarea, select { max-width:100%; min-width:0; }
 @media (max-width:640px) {
   .overflow-x-auto { -webkit-overflow-scrolling:touch; }
 }
+
+\n/* SHQ MOBILE FINAL HARDENING */
+html, body { margin:0; width:100%; max-width:100%; overflow-x:hidden; }
+#root { width:100%; max-width:100%; min-width:320px; overflow-x:hidden; }
+img, svg, video, canvas { max-width:100%; }
+button, a, input, textarea, select { min-width:0; max-width:100%; }
+@media (max-width: 639px) {
+  main, section, article, aside, header, footer { max-width:100%; }
+  table { min-width:560px; }
+  .overflow-x-auto { width:100%; max-width:100%; overflow-x:auto; }
+}
