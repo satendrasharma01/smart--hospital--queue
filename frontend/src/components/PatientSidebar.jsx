@@ -48,7 +48,7 @@ function PatientSidebar() {
 
   return (
     <>
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 xl:hidden">
         <NavLink to="/patient/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
             <Activity size={17} />
@@ -68,7 +68,7 @@ function PatientSidebar() {
       </div>
       <nav
         aria-label="Patient navigation"
-        className="flex gap-1 w-full max-w-full overflow-x-auto border-b border-slate-200 bg-white w-full max-w-full px-2 py-2 lg:hidden"
+        className="flex w-full max-w-full gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 py-2 xl:hidden"
       >
         {links.map((link) => {
           const Icon = link.icon;
@@ -90,7 +90,7 @@ function PatientSidebar() {
           );
         })}
       </nav>
-      <aside className="hidden min-h-screen w-64 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
+      <aside className="hidden min-h-screen w-64 shrink-0 border-r border-slate-200 bg-white xl:flex xl:flex-col">
       <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-6">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
           <Activity size={17} />
