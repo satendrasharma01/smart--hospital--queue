@@ -520,8 +520,8 @@ function DoctorDashboard() {
         {/* Header */}
 
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-            <div className="flex items-center gap-3">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white">
                 <Activity size={18} />
               </div>
@@ -537,7 +537,7 @@ function DoctorDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 items-center gap-4">
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium text-slate-900">
                   {user?.name}
@@ -562,7 +562,7 @@ function DoctorDashboard() {
 
         {/* Main */}
 
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-8">
           <div>
             <p className="text-sm text-slate-500">
               Doctor Portal
@@ -583,7 +583,7 @@ function DoctorDashboard() {
 
           {error && (
             <div className="mt-6 rounded-xl border border-red-200 bg-white p-4">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-red-600">
                   {error}
                 </p>
@@ -604,7 +604,7 @@ function DoctorDashboard() {
               ================================================= */}
 
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-6 lg:flex-col sm:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                   Currently serving
@@ -766,7 +766,7 @@ function DoctorDashboard() {
                         }
                         className="flex flex-col gap-4 border-b border-slate-100 p-5 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div className="flex items-center gap-4">
+                        <div className="flex min-w-0 items-center gap-4">
                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                             <UserRound
                               size={18}
@@ -791,7 +791,7 @@ function DoctorDashboard() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize text-slate-700">
                             {
                               appointment.status

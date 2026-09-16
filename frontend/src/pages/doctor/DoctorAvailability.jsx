@@ -363,7 +363,7 @@ function DoctorAvailability() {
 
       <div className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
+          <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6">
             <div>
               <p className="text-sm text-slate-500">
                 Smart Hospital
@@ -376,7 +376,7 @@ function DoctorAvailability() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-8">
           <div>
             <p className="text-sm text-slate-500">
               Schedule management
@@ -386,7 +386,7 @@ function DoctorAvailability() {
               Manage your availability
             </h2>
 
-            <p className="mt-2 max-w-2xl text-sm text-slate-500">
+            <p className="mt-2 w-full max-w-2xl text-sm text-slate-500">
               Set the days and time periods when
               patients can book appointments with
               you.
@@ -412,7 +412,7 @@ function DoctorAvailability() {
           <div className="mt-8 grid gap-6 lg:grid-cols-[380px_1fr]">
             {/* Add schedule */}
             <section className="rounded-xl border border-slate-200 bg-white p-6">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                   <Plus size={19} />
                 </div>
@@ -461,7 +461,7 @@ function DoctorAvailability() {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label
                       htmlFor="startTime"
@@ -612,7 +612,7 @@ function DoctorAvailability() {
 
             {/* Existing schedules */}
             <section className="rounded-xl border border-slate-200 bg-white p-6">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="font-semibold text-slate-900">
                     Your schedules
@@ -691,7 +691,7 @@ function DoctorAvailability() {
                                 key={
                                   item._id
                                 }
-                                className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 px-4 py-3"
+                                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg bg-slate-50 px-4 py-3"
                               >
                                 <div>
                                   <p className="text-sm font-medium text-slate-900">

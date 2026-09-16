@@ -381,7 +381,7 @@ function DoctorProfile() {
 
       <div className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6">
+          <div className="mx-auto max-w-6xl px-4 sm:px-4 sm:px-6 py-6">
             <p className="text-sm text-slate-500">
               Doctor Portal
             </p>
@@ -397,7 +397,7 @@ function DoctorProfile() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+        <main className="mx-auto max-w-6xl px-4 sm:px-4 sm:px-6 py-8">
           {error && (
             <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
               <p className="text-sm text-red-700">
@@ -509,8 +509,8 @@ function DoctorProfile() {
 
             {/* PROFILE DETAILS */}
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-              <div className="flex items-center gap-3">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-5 sm:p-8">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                   <Stethoscope
                     size={18}
@@ -534,7 +534,7 @@ function DoctorProfile() {
                 }
                 className="mt-7 space-y-5"
               >
-                <div className="grid gap-5 md:grid-cols-2">
+                <div className="grid gap-5 md:grid-cols-1 sm:grid-cols-2">
                   <Field
                     label="Full name"
                     name="name"

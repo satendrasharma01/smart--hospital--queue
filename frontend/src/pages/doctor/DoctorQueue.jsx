@@ -422,7 +422,7 @@ function DoctorQueue() {
         {/* Header */}
 
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
             <div>
               <p className="text-sm font-semibold text-slate-900">
                 Smart Hospital
@@ -455,7 +455,7 @@ function DoctorQueue() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-8">
           {/* Heading */}
 
           <div>
@@ -495,7 +495,7 @@ function DoctorQueue() {
 
           {/* Stats */}
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               <p className="text-sm text-slate-500">
                 Total Today
@@ -534,7 +534,7 @@ function DoctorQueue() {
           {/* Currently Serving */}
 
           <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-5 lg:flex-col sm:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                   Currently serving
@@ -739,7 +739,7 @@ function DoctorQueue() {
 
                         {/* Patient */}
 
-                        <div className="mt-4 flex items-center gap-3 md:mt-0">
+                        <div className="mt-4 flex flex-wrap items-center gap-3 md:mt-0">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
                             <UserRound
                               size={17}

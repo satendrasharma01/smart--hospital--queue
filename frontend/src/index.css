@@ -33,52 +33,11 @@ button, a {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* =========================================================
-   RESPONSIVE APPLICATION SAFETY
-   Doctor + Patient portals
-   ========================================================= */
-
-html {
-  width: 100%;
-  overflow-x: hidden;
+\n/* SHQ RESPONSIVE HARDENING */
+html, body, #root { width:100%; min-width:320px; overflow-x:hidden; }
+*, *::before, *::after { box-sizing:border-box; }
+img, svg, video, canvas { max-width:100%; height:auto; }
+button, input, textarea, select { max-width:100%; min-width:0; }
+@media (max-width:640px) {
+  .overflow-x-auto { -webkit-overflow-scrolling:touch; }
 }
-
-#root {
-  width: 100%;
-  min-width: 320px;
-  overflow-x: hidden;
-}
-
-main,
-section,
-article,
-aside {
-  min-width: 0;
-}
-
-button,
-a,
-input,
-textarea,
-select {
-  max-width: 100%;
-}
-
-input,
-textarea,
-select {
-  min-width: 0;
-}
-
-@media (max-width: 640px) {
-  h1 {
-    overflow-wrap: anywhere;
-  }
-
-  p,
-  span,
-  label {
-    overflow-wrap: break-word;
-  }
-}
-

@@ -171,7 +171,7 @@ function DoctorPatients() {
         {/* Header */}
 
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
             <div>
               <p className="text-sm font-semibold text-slate-900">
                 Smart Hospital
@@ -202,7 +202,7 @@ function DoctorPatients() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-8">
           {/* Heading */}
 
           <div>
@@ -223,7 +223,7 @@ function DoctorPatients() {
           {/* Search */}
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:max-w-md">
+            <div className="relative w-full sm:w-full max-w-md">
               <Search
                 size={17}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -323,7 +323,7 @@ function DoctorPatients() {
                   >
                     {/* Patient */}
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
                         <Users
                           size={18}

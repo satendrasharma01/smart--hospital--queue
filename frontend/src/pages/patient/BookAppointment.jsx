@@ -1106,7 +1106,7 @@ function BookAppointment() {
   if (!doctor) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 sm:px-6">
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-8 text-center">
           <Stethoscope
             size={30}
             className="mx-auto text-slate-400"
@@ -1162,7 +1162,7 @@ function BookAppointment() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-5">
+        <div className="mx-auto max-w-4xl px-4 sm:px-4 sm:px-6 py-5">
           <button
             type="button"
             onClick={() =>
@@ -1179,7 +1179,7 @@ function BookAppointment() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
+      <main className="mx-auto max-w-4xl px-4 sm:px-4 sm:px-6 py-8">
         {/* PAGE HEADER */}
 
         <div>
@@ -1200,7 +1200,7 @@ function BookAppointment() {
         {/* DOCTOR CARD */}
 
         <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             {doctorImage ? (
               <img
                 src={doctorImage}
@@ -1398,7 +1398,7 @@ function BookAppointment() {
                   </p>
                 </div>
               ) : (
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   {timeSlots.map(
                     (time) => {
                       const selected =

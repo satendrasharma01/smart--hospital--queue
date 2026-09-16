@@ -304,7 +304,7 @@ function PatientAppointments() {
 
       <main className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-7">
+          <div className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-7">
             <p className="text-sm text-slate-500">
               Patient Portal
             </p>
@@ -319,7 +319,7 @@ function PatientAppointments() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-8">
           {/* Error */}
           {error && (
             <div className="mb-4 rounded-lg border border-red-200 bg-white p-4">
@@ -364,7 +364,7 @@ function PatientAppointments() {
             </div>
           ) : (
             /* Appointment list */
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-1 sm:grid-cols-2">
               {appointments.map(
                 (appointment) => (
                   <AppointmentCard
@@ -425,7 +425,7 @@ function AppointmentCard({
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100">
             <Stethoscope size={20} />
@@ -447,7 +447,7 @@ function AppointmentCard({
         </span>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-5">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-5">
         <div>
           <p className="flex items-center gap-2 text-xs text-slate-500">
             <CalendarDays size={14} />

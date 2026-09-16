@@ -86,7 +86,7 @@ function PatientDoctors() {
 
       <main className="min-w-0 flex-1">
         <div className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-7">
+          <div className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-7">
             <p className="text-sm text-slate-500">
               Patient Portal
             </p>
@@ -101,9 +101,9 @@ function PatientDoctors() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-8">
           {/* Search */}
-          <div className="relative max-w-xl">
+          <div className="relative w-full max-w-xl">
             <Search
               size={18}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -120,7 +120,7 @@ function PatientDoctors() {
 
           {/* Departments */}
           <section className="mt-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-base font-semibold text-slate-900">
                 Departments
               </h2>
@@ -203,7 +203,7 @@ function PatientDoctors() {
                 </p>
               </div>
             ) : (
-              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-5 grid gap-4 md:grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {doctors.map((doctor) => (
                   <DoctorCard
                     key={doctor._id}

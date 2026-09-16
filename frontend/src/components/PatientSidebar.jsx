@@ -68,7 +68,7 @@ function PatientSidebar() {
       </div>
       <nav
         aria-label="Patient navigation"
-        className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-3 py-2 lg:hidden"
+        className="flex gap-1 w-full max-w-full overflow-x-auto border-b border-slate-200 bg-white w-full max-w-full px-2 py-2 lg:hidden"
       >
         {links.map((link) => {
           const Icon = link.icon;

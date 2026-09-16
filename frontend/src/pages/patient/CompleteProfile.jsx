@@ -50,9 +50,9 @@ function CompleteProfile() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 sm:px-6 py-12">
-      <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+    <main className="min-h-screen bg-slate-50 px-4 sm:px-4 sm:px-6 py-12">
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm sm:p-10">
           <p className="text-sm font-medium uppercase tracking-[0.15em] text-slate-500">
             Patient profile
           </p>
