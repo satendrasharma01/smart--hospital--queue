@@ -213,8 +213,8 @@ function PatientProfile() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 sm:px-4 sm:px-6 py-10">
-        <div className="mx-auto max-w-4xl rounded-xl border border-red-200 bg-white p-5 sm:p-8 text-center">
+      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mx-auto max-w-4xl rounded-xl border border-red-200 bg-white p-5 text-center sm:p-8">
           <p className="text-sm text-red-600">
             {error}
           </p>
@@ -250,7 +250,7 @@ function PatientProfile() {
       ================================================= */}
 
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-4 sm:px-6 py-5">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5">
           <p className="text-sm text-slate-500">
             Patient Portal
           </p>
@@ -266,7 +266,7 @@ function PatientProfile() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 sm:px-4 sm:px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {/* =================================================
             PROFILE CARD
         ================================================= */}
@@ -384,7 +384,7 @@ function PatientProfile() {
         ================================================= */}
 
         <section className="mt-8">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
               <FileText size={20} />
             </div>
@@ -413,7 +413,7 @@ function PatientProfile() {
           {/* Loading */}
 
           {medicalLoading ? (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 sm:p-8 text-center">
+            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 text-center sm:p-8">
               <p className="text-sm text-slate-500">
                 Loading medical history...
               </p>

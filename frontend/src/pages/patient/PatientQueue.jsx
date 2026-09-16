@@ -423,7 +423,7 @@ function PatientQueue() {
 
       <main className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-5xl px-4 sm:px-4 sm:px-6 py-6">
+          <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
             <p className="text-sm text-slate-500">
               Patient Portal
             </p>
@@ -438,7 +438,7 @@ function PatientQueue() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-5xl px-4 sm:px-4 sm:px-6 py-8">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
           {error && !queue ? (
             <EmptyQueue
               message={error}
@@ -473,7 +473,7 @@ function QueueContent({
 
   return (
     <>
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-5 sm:p-8">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm text-slate-500">
@@ -497,7 +497,7 @@ function QueueContent({
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <QueueStat
             label="Your token"
             value={`#${queue.yourToken}`}
@@ -637,7 +637,7 @@ function EmptyQueue({
         Queue unavailable
       </h2>
 
-      <p className="mx-auto mt-1 w-full max-w-md text-sm text-slate-500">
+      <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
         {message}
       </p>
 

@@ -442,7 +442,7 @@ function PatientDashboard() {
               </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium text-slate-900">
                   {patientName}
@@ -460,7 +460,7 @@ function PatientDashboard() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 sm:px-4 sm:px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
           {/* Welcome */}
           <div>
             <p className="text-sm text-slate-500">
@@ -478,7 +478,7 @@ function PatientDashboard() {
 
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-4">
+              <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                   <UserRound
                     size={25}
@@ -543,7 +543,7 @@ function PatientDashboard() {
                 </span>
               </div>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <DashboardQueueStat
                   label="Your Token"
                   value={`#${queue.yourToken}`}
@@ -613,7 +613,7 @@ function PatientDashboard() {
           {!queue &&
             appointments.length === 0 && (
               <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-                <div className="flex min-w-0 items-center gap-4">
+                <div className="flex items-center gap-4">
                   <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
                     <CalendarDays size={20} />
                   </div>
@@ -694,7 +694,7 @@ function PatientDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="mt-5 grid gap-4 md:grid-cols-1 sm:grid-cols-2">
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
                 {appointments
                   .slice(0, 4)
                   .map(
@@ -770,7 +770,7 @@ function AppointmentCard({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Appointment
@@ -790,7 +790,7 @@ function AppointmentCard({
         </span>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-5">
+      <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-5">
         <div>
           <p className="flex items-center gap-2 text-xs text-slate-500">
             <CalendarDays size={14} />

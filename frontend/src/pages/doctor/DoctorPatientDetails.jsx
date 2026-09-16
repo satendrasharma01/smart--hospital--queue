@@ -312,8 +312,8 @@ function DoctorPatientDetails() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 sm:px-4 sm:px-6 py-10">
-        <div className="mx-auto w-full max-w-3xl rounded-xl border border-red-200 bg-white p-5 sm:p-8 text-center">
+      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-5 text-center sm:p-8">
           <p className="text-sm text-red-600">
             {error}
           </p>
@@ -405,7 +405,7 @@ function DoctorPatientDetails() {
       ================================================= */}
 
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-4 sm:px-6 py-5">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5">
           <Link
             to="/doctor/dashboard"
             className="inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-900"
@@ -416,7 +416,7 @@ function DoctorPatientDetails() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 sm:px-4 sm:px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {/* =================================================
             PAGE TITLE
         ================================================= */}
@@ -519,7 +519,7 @@ function DoctorPatientDetails() {
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                 <FileText size={19} />
               </div>
@@ -822,7 +822,7 @@ function DoctorPatientDetails() {
 
           {appointments.length ===
           0 ? (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 sm:p-8 text-center">
+            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 text-center sm:p-8">
               <p className="text-sm text-slate-500">
                 No appointment history available.
               </p>
@@ -862,7 +862,7 @@ function DoctorPatientDetails() {
                           </p>
                         </div>
 
-                        <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex items-center gap-4">
                           <span className="text-sm text-slate-600">
                             Token #
                             {
@@ -924,14 +924,14 @@ function DoctorPatientDetails() {
             )}
 
           {recordsLoading ? (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 sm:p-8 text-center">
+            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 text-center sm:p-8">
               <p className="text-sm text-slate-500">
                 Loading medical records...
               </p>
             </div>
           ) : records.length ===
             0 ? (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 sm:p-8 text-center">
+            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 text-center sm:p-8">
               <FileText
                 size={28}
                 className="mx-auto text-slate-400"

@@ -82,7 +82,7 @@ function PatientDoctorDetails() {
 
       <main className="min-w-0 flex-1">
         <div className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-5xl px-4 sm:px-4 sm:px-6 py-6">
+          <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -94,8 +94,8 @@ function PatientDoctorDetails() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-5xl px-4 sm:px-4 sm:px-6 py-8">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-5 sm:p-8">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               {doctor.user?.profileImage?.url ? (
                 <img
@@ -124,7 +124,7 @@ function PatientDoctorDetails() {
               </div>
             </div>
 
-            <div className="mt-8 grid gap-4 border-t border-slate-200 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid gap-4 border-t border-slate-200 pt-6 sm:grid-cols-3">
               <InfoItem
                 label="Experience"
                 value={
@@ -144,7 +144,7 @@ function PatientDoctorDetails() {
                 value={department}
               />
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 p-4">
+            <div className="mt-6 flex items-center gap-3 rounded-xl bg-slate-50 p-4">
               <WalletCards size={20} className="text-slate-700" />
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-400">
@@ -163,7 +163,7 @@ function PatientDoctorDetails() {
             </div>
           </section>
 
-          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 sm:p-5 sm:p-8">
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
                 About the doctor
@@ -175,8 +175,8 @@ function PatientDoctorDetails() {
             </div>
           </section>
 
-          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 sm:p-5 sm:p-8">
-            <div className="flex flex-wrap items-center gap-3">
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+            <div className="flex items-center gap-3">
               <CalendarDays size={20} className="text-slate-700" />
 
               <div>
@@ -195,7 +195,7 @@ function PatientDoctorDetails() {
                 {doctor.availability.map((item, index) => (
                   <div
                     key={item._id || index}
-                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-slate-200 p-4"
+                    className="flex items-center justify-between rounded-lg border border-slate-200 p-4"
                   >
                     <div>
                       <p className="text-sm font-medium text-slate-900">
