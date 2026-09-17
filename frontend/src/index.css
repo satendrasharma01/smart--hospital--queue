@@ -68,3 +68,16 @@ html, body, #root {
     min-width: 0;
   }
 }
+/* SHQ ADMIN-MATCHED PORTAL SHELL
+   Doctor and Patient use the same fixed 16rem desktop rail as Admin.
+   On mobile the rail becomes an off-canvas drawer and the page uses the full viewport. */
+.portal-main-content {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+@media (max-width: 1023px) {
+  .portal-main-content {
+    width: 100%;
+  }
+}
