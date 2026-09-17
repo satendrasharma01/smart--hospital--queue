@@ -686,51 +686,69 @@ const getMyQueueStatus = async (
      * consultation duration.
      */
 
-    let estimatedWaitMinutes = 0;
+    const now = new Date();
 
-    if (currentPatient) {
-      if (
-        appointment.tokenNumber >
-        currentPatient.tokenNumber
-      ) {
-        const activeBeforePatient =
-          queueAppointments.filter(
-            (item) =>
-              item.tokenNumber <
-              appointment.tokenNumber
+    let estimatedWaitSeconds = 0;
+    let estimatedStartAt = now;
+
+    if (slotDuration !== null) {
+      if (appointment.status === "in-progress") {
+        estimatedWaitSeconds = 0;
+        estimatedStartAt = now;
+      } else if (currentPatient) {
+        const activeBeforePatient = queueAppointments.filter(
+          (item) => item.tokenNumber < appointment.tokenNumber
+        );
+
+        let currentRemainingSeconds = slotDuration * 60;
+
+        if (currentPatient.consultationStartedAt) {
+          const startedAt = new Date(currentPatient.consultationStartedAt);
+          const elapsedSeconds = Math.max(
+            0,
+            Math.floor((now.getTime() - startedAt.getTime()) / 1000)
           );
+          currentRemainingSeconds = Math.max(
+            0,
+            slotDuration * 60 - elapsedSeconds
+          );
+        }
 
-        estimatedWaitMinutes =
-          activeBeforePatient.length *
-          slotDuration;
+        const waitingAheadCount = Math.max(
+          0,
+          activeBeforePatient.length - 1
+        );
+
+        estimatedWaitSeconds =
+          currentRemainingSeconds +
+          waitingAheadCount * slotDuration * 60;
+
+        estimatedStartAt = new Date(
+          now.getTime() + estimatedWaitSeconds * 1000
+        );
       } else {
-        estimatedWaitMinutes = 0;
+        const queueBasedWaitSeconds =
+          patientsAhead * slotDuration * 60;
+
+        const scheduledWaitSeconds = Math.max(
+          0,
+          Math.floor(
+            (new Date(appointment.appointmentDate).getTime() - now.getTime()) / 1000
+          )
+        );
+
+        estimatedWaitSeconds = Math.max(
+          queueBasedWaitSeconds,
+          scheduledWaitSeconds
+        );
+
+        estimatedStartAt = new Date(
+          now.getTime() + estimatedWaitSeconds * 1000
+        );
       }
     } else {
-      /*
-       * Doctor is currently idle.
-       *
-       * Every active patient before
-       * this patient represents one slot.
-       */
-
-      estimatedWaitMinutes =
-        patientsAhead *
-        slotDuration;
-    }
-
-    /*
-     * ---------------------------------------------------
-     * IF PATIENT IS CURRENTLY SERVING
-     * ---------------------------------------------------
-     */
-
-    if (appointment.status === "in-progress") {
-      estimatedWaitMinutes = 0;
-    }
-
-    if (slotDuration === null) {
-      estimatedWaitMinutes = null;
+      estimatedWaitSeconds = null;
+      estimatedStartAt = null;
     }
 
     /*
@@ -767,7 +785,16 @@ const getMyQueueStatus = async (
 
         patientsAhead,
 
-        estimatedWaitMinutes,
+        estimatedWaitMinutes:
+          estimatedWaitSeconds === null
+            ? null
+            : Math.ceil(estimatedWaitSeconds / 60),
+
+        estimatedWaitSeconds,
+
+        estimatedStartAt,
+
+        serverTime: now,
 
         slotDuration,
 

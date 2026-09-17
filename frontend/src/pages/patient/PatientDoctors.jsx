@@ -81,7 +81,7 @@ function PatientDoctors() {
   }, [token, selectedDepartment, search]);
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="portal-shell min-h-screen bg-slate-50">
       <PatientSidebar />
 
       <main className="min-w-0 flex-1">
@@ -230,11 +230,19 @@ function DoctorCard({ doctor, onView }) {
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-6 transition hover:border-slate-300 hover:shadow-sm">
-      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
-        <Stethoscope size={21} className="text-slate-700" />
-      </div>
+      {doctor.user?.profileImage?.url ? (
+        <img
+          src={doctor.user.profileImage.url}
+          alt={doctorName}
+          className="h-14 w-14 rounded-xl object-cover"
+        />
+      ) : (
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100">
+          <Stethoscope size={21} className="text-slate-700" />
+        </div>
+      )}
 
-      <h3 className="mt-5 text-lg font-semibold text-slate-900">
+      <h3 className="mt-4 text-lg font-semibold text-slate-900">
         {doctorName}
       </h3>
 

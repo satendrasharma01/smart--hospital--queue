@@ -59,6 +59,19 @@ const appointmentSchema = new mongoose.Schema(
       trim: true,
     },
 
+    /*
+     * Patient-only history visibility flag.
+     *
+     * Clear History never deletes an appointment. It only hides
+     * an already-historical record from this patient's portal.
+     * Doctor/Admin queries continue to see the original record.
+     */
+    patientHistoryArchived: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
     reason: {
       type: String,
       trim: true,

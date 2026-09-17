@@ -13,6 +13,7 @@ import {
 import { Link, useParams } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import DoctorSidebar from "../../components/DoctorSidebar";
 import {
   formatAppointmentDate,
   formatAppointmentTime,
@@ -20,7 +21,10 @@ import {
 
 function DoctorPatientDetails() {
   const { patientId } = useParams();
-  const { token } = useAuth();
+  const {
+    token,
+    loading: authLoading,
+  } = useAuth();
 
   const [patient, setPatient] = useState(null);
   const [appointments, setAppointments] = useState([]);
@@ -142,13 +146,32 @@ function DoctorPatientDetails() {
    */
 
   useEffect(() => {
+    // Wait until AuthContext finishes restoring the HttpOnly-cookie session.
+    // Without this guard, the page can remain on "Loading patient details..."
+    // forever when the route mounts before /auth/me completes.
+    if (authLoading) {
+      return;
+    }
+
     if (!token || !patientId) {
+      setLoading(false);
+      setError(
+        !patientId
+          ? "Invalid patient profile."
+          : "Your session has expired. Please log in again."
+      );
       return;
     }
 
     fetchPatient();
     fetchMedicalRecords();
-  }, [token, patientId, fetchPatient, fetchMedicalRecords]);
+  }, [
+    authLoading,
+    token,
+    patientId,
+    fetchPatient,
+    fetchMedicalRecords,
+  ]);
 
   /*
    * =====================================================
@@ -296,10 +319,13 @@ function DoctorPatientDetails() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">
+      <div className="portal-shell min-h-screen bg-slate-50">
+        <DoctorSidebar />
+        <main className="flex min-h-[calc(100vh-4rem)] min-w-0 items-center justify-center px-4 sm:px-6">
+          <p className="text-sm text-slate-500">
           Loading patient details...
-        </p>
+          </p>
+        </main>
       </div>
     );
   }
@@ -312,7 +338,8 @@ function DoctorPatientDetails() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="portal-shell min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+        <DoctorSidebar />
         <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-5 text-center sm:p-8">
           <p className="text-sm text-red-600">
             {error}
@@ -399,12 +426,15 @@ function DoctorPatientDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="portal-shell min-h-screen bg-slate-50">
       {/* =================================================
           HEADER
       ================================================= */}
 
-      <header className="border-b border-slate-200 bg-white">
+      <DoctorSidebar />
+
+      <div className="min-w-0 flex-1">
+        <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5">
           <Link
             to="/doctor/dashboard"
@@ -437,9 +467,17 @@ function DoctorPatientDetails() {
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-              <UserRound size={28} />
-            </div>
+            {patient?.profilePicture ? (
+              <img
+                src={patient.profilePicture}
+                alt={user?.name || "Patient"}
+                className="h-16 w-16 shrink-0 rounded-full object-cover border-2 border-slate-100"
+              />
+            ) : (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                <UserRound size={28} />
+              </div>
+            )}
 
             <div>
               <h2 className="text-xl font-semibold text-slate-900">
@@ -1040,6 +1078,7 @@ function DoctorPatientDetails() {
         </section>
       </main>
     </div>
+  </div>
   );
 }
 

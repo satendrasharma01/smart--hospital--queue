@@ -81,3 +81,23 @@ html, body, #root {
     width: 100%;
   }
 }
+
+
+/* Portal shell: mirrors the working Admin layout.
+   Desktop sidebars are fixed at 16rem, so the shell reserves that rail.
+   At mobile widths the sidebar is off-canvas and the content returns to full width. */
+.portal-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .portal-shell {
+    padding-left: 16rem;
+  }
+}
+@media (max-width: 1023px) {
+  .portal-shell {
+    padding-left: 0;
+  }
+}

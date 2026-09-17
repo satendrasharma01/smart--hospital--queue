@@ -1081,6 +1081,9 @@ const getMyAppointments = async (
     const appointments =
       await Appointment.find({
         patient: patient._id,
+        patientHistoryArchived: {
+          $ne: true,
+        },
       })
         .populate({
           path: "doctor",
@@ -1124,6 +1127,67 @@ const getMyAppointments = async (
       success: false,
       message:
         "Server error while fetching appointments",
+    });
+  }
+};
+
+/*
+ * =====================================================
+ * CLEAR PATIENT APPOINTMENT HISTORY
+ * =====================================================
+ *
+ * Patient-only visibility operation. Appointment records are
+ * preserved in MongoDB and remain visible to Doctor/Admin/audit
+ * queries. Only this patient's portal view is cleared.
+ */
+
+const clearMyAppointmentHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findOne({
+      user: req.user.userId,
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient profile not found",
+      });
+    }
+
+    const result = await Appointment.updateMany(
+      {
+        patient: patient._id,
+        status: {
+          $in: ["completed", "cancelled"],
+        },
+        patientHistoryArchived: {
+          $ne: true,
+        },
+      },
+      {
+        $set: {
+          patientHistoryArchived: true,
+        },
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: result.modifiedCount
+        ? "Appointment history cleared from your view."
+        : "There is no appointment history to clear.",
+      clearedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error(
+      "Clear patient appointment history error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Server error while clearing appointment history.",
     });
   }
 };
@@ -1800,6 +1864,7 @@ const completeAppointment = async (
 module.exports = {
   createAppointment,
   getMyAppointments,
+  clearMyAppointmentHistory,
   cancelAppointment,
   completeAppointment,
 };

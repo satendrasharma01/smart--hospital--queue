@@ -505,7 +505,7 @@ function DoctorDashboard() {
    */
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="portal-shell min-h-screen bg-slate-50">
       {/* =================================================
           DOCTOR SIDEBAR
           ================================================= */}

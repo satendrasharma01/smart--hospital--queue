@@ -359,7 +359,7 @@ function DoctorProfile() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-slate-50">
+      <div className="portal-shell min-h-screen bg-slate-50">
         <DoctorSidebar />
 
         <main className="flex flex-1 items-center justify-center">
@@ -376,7 +376,7 @@ function DoctorProfile() {
       ?.url || "";
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="portal-shell min-h-screen bg-slate-50">
       <DoctorSidebar />
 
       <div className="min-w-0 flex-1">

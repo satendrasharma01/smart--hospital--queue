@@ -11,6 +11,8 @@ const {
   getPatientProfile,
   updatePatientProfile,
   uploadProfilePicture,
+  deleteProfilePicture,
+  clearPatientHistory,
 } = require("../controllers/patient.controller");
 
 const protect = require("../middleware/auth.middleware");
@@ -195,6 +197,30 @@ router.patch(
   ),
 
   uploadProfilePicture
+);
+
+/*
+ * =====================================================
+ * DELETE PROFILE PICTURE
+ * =====================================================
+ */
+router.delete(
+  "/profile/picture",
+  protect,
+  authorizeRoles("patient"),
+  deleteProfilePicture
+);
+
+/*
+ * =====================================================
+ * CLEAR PATIENT APPOINTMENT HISTORY VIEW
+ * =====================================================
+ */
+router.post(
+  "/appointments/history/clear",
+  protect,
+  authorizeRoles("patient"),
+  clearPatientHistory
 );
 
 /*

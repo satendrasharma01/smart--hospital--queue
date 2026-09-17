@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   CalendarDays,
+  Camera,
+  CheckCircle2,
   FileText,
   HeartPulse,
   Mail,
   MapPin,
   Phone,
+  Trash2,
   UserRound,
 } from "lucide-react";
 
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import PatientSidebar from "../../components/PatientSidebar";
 
 function PatientProfile() {
   const { token } = useAuth();
@@ -31,6 +35,11 @@ function PatientProfile() {
 
   const [medicalError, setMedicalError] =
     useState("");
+
+  const [uploading, setUploading] = useState(false);
+  const [removingImage, setRemovingImage] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [clearingHistory, setClearingHistory] = useState(false);
 
   /*
    * =====================================================
@@ -109,6 +118,83 @@ function PatientProfile() {
       setMedicalLoading(false);
     }
   }, [token]);
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Please select a JPG, PNG or WebP image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be smaller than 5 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError("");
+      setSuccess("");
+
+      const formData = new FormData();
+      formData.append("profilePicture", file);
+
+      const response = await api.patch(
+        "/patients/profile/picture",
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data?.patient) {
+        setPatient(response.data.patient);
+      }
+
+      setSuccess("Profile picture updated successfully.");
+    } catch (error) {
+      console.error("Upload patient profile picture error:", error);
+      setError(
+        error.response?.data?.message ||
+          "Unable to upload profile picture."
+      );
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!window.confirm("Remove your profile picture?")) return;
+
+    try {
+      setRemovingImage(true);
+      setError("");
+      setSuccess("");
+
+      await api.delete("/patients/profile/picture", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setPatient((current) => ({
+        ...current,
+        profilePicture: null,
+      }));
+
+      setSuccess("Profile picture removed successfully.");
+    } catch (error) {
+      console.error("Remove patient profile picture error:", error);
+      setError(
+        error.response?.data?.message ||
+          "Unable to remove profile picture."
+      );
+    } finally {
+      setRemovingImage(false);
+    }
+  };
 
   /*
    * =====================================================
@@ -197,10 +283,13 @@ function PatientProfile() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">
+      <div className="portal-shell min-h-screen bg-slate-50">
+        <PatientSidebar />
+        <main className="flex min-h-[calc(100vh-4rem)] min-w-0 items-center justify-center px-4 sm:px-6">
+          <p className="text-sm text-slate-500">
           Loading your profile...
-        </p>
+          </p>
+        </main>
       </div>
     );
   }
@@ -213,7 +302,8 @@ function PatientProfile() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="portal-shell min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+        <PatientSidebar />
         <div className="mx-auto max-w-4xl rounded-xl border border-red-200 bg-white p-5 text-center sm:p-8">
           <p className="text-sm text-red-600">
             {error}
@@ -244,12 +334,15 @@ function PatientProfile() {
     patient?.profilePicture || null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="portal-shell min-h-screen bg-slate-50">
       {/* =================================================
           HEADER
       ================================================= */}
 
-      <header className="border-b border-slate-200 bg-white">
+      <PatientSidebar />
+
+      <div className="min-w-0 flex-1">
+        <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5">
           <p className="text-sm text-slate-500">
             Patient Portal
@@ -275,19 +368,51 @@ function PatientProfile() {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             {/* Profile Picture */}
 
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100">
-              {profilePicture ? (
-                <img
-                  src={profilePicture}
-                  alt={patientName}
-                  className="h-full w-full object-cover"
+            <div className="flex shrink-0 flex-col items-center gap-3">
+              <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-slate-100 bg-slate-100 shadow-sm sm:h-32 sm:w-32">
+                {profilePicture ? (
+                  <img
+                    src={profilePicture}
+                    alt={patientName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <UserRound size={42} className="text-slate-400" />
+                )}
+              </div>
+
+              <div className="flex w-full max-w-56 gap-2">
+                <label
+                  htmlFor="patientProfilePicture"
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                >
+                  <Camera size={15} />
+                  {uploading ? "Uploading..." : profilePicture ? "Change" : "Upload"}
+                </label>
+                <input
+                  id="patientProfilePicture"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  className="hidden"
                 />
-              ) : (
-                <UserRound
-                  size={38}
-                  className="text-slate-400"
-                />
-              )}
+                {profilePicture && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    disabled={removingImage}
+                    aria-label="Remove profile picture"
+                    title="Remove profile picture"
+                    className="rounded-lg border border-red-200 px-3 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+              <p className="text-center text-[11px] text-slate-400">
+                JPG, PNG or WebP · Max 5 MB
+              </p>
             </div>
 
             {/* Name */}
@@ -561,6 +686,7 @@ function PatientProfile() {
         </section>
       </main>
     </div>
+  </div>
   );
 }
 

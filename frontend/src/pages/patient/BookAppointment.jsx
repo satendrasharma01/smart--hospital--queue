@@ -19,6 +19,7 @@ import {
 
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import PatientSidebar from "../../components/PatientSidebar";
 import {
   formatAppointmentDate,
   getHospitalDateKeyFromInstant,
@@ -1085,14 +1086,17 @@ function BookAppointment() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
+      <div className="portal-shell min-h-screen bg-slate-50">
+        <PatientSidebar />
+        <main className="flex min-w-0 flex-1 items-center justify-center px-4">
+          <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
 
           <p className="mt-4 text-sm text-slate-500">
             Loading doctor availability...
           </p>
-        </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -1105,8 +1109,10 @@ function BookAppointment() {
 
   if (!doctor) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 sm:px-6">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 text-center sm:p-8">
+      <div className="portal-shell min-h-screen bg-slate-50">
+        <PatientSidebar />
+        <main className="flex min-w-0 flex-1 items-center justify-center px-4 sm:px-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 text-center sm:p-8">
           <Stethoscope
             size={30}
             className="mx-auto text-slate-400"
@@ -1130,7 +1136,8 @@ function BookAppointment() {
           >
             Go Back
           </button>
-        </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -1160,8 +1167,11 @@ function BookAppointment() {
    */
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="portal-shell min-h-screen bg-slate-50">
+      <PatientSidebar />
+
+      <div className="min-w-0 flex-1">
+        <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 py-5">
           <button
             type="button"
@@ -1547,6 +1557,7 @@ function BookAppointment() {
           </form>
         )}
       </main>
+      </div>
     </div>
   );
 }

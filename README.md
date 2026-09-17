@@ -1,12 +1,12 @@
 # Smart Hospital Queue System
 
-A production-oriented full-stack hospital appointment and real-time queue management platform built with React, Node.js, Express, MongoDB, Mongoose and Socket.IO.
+A production-oriented full-stack hospital appointment and real-time queue management platform built with **React, Node.js, Express, MongoDB, Mongoose and Socket.IO**.
 
-> **Portfolio project:** demonstrates backend engineering, database integrity, authentication/authorization, real-time systems, queue management, concurrency protection and production hardening. It is not certified clinical software.
+> **Portfolio project:** demonstrates backend engineering, authentication and authorization, database integrity, real-time systems, queue management, concurrency protection and production hardening. It is not certified clinical software.
 
-## What the system solves
+## Overview
 
-Traditional appointment systems often stop at booking. This project models the complete operational lifecycle:
+Smart Hospital Queue System models the operational flow from doctor discovery and appointment booking through token allocation, persistent FIFO queue processing and consultation completion.
 
 ```text
 Patient discovers doctor
@@ -19,35 +19,36 @@ Waits in persistent FIFO queue
         ↓
 Doctor calls next patient
         ↓
-Consultation completed / missed / cancelled
+Completed / missed / cancelled
         ↓
-Queue and appointment state remain consistent
+Appointment + queue state stay consistent
 ```
 
-A cancelled appointment remains in history but no longer occupies its active slot or token. Rebooking can safely reuse an available cancelled token without renumbering active tokens.
+The system uses real API/database state rather than frontend mock data for operational workflows.
 
 ## Core features
 
 ### Patient
-- Secure registration and login
-- Profile setup and editing
+- Registration and login
+- Profile setup and editing with profile image support
 - Browse active doctors and departments
-- View doctor profile, bio, availability and consultation fee
-- Book appointments from real availability
-- View appointment and token status
+- View doctor bio, availability, photo and consultation fee
+- Book appointments from available slots
+- View appointment, token and queue status
 - Cancel eligible appointments
-- Rebook a released slot
+- Rebook released slots
 - View authorized medical records
-- Real-time queue updates
+- Real-time queue updates through Socket.IO
+- Today/upcoming appointments and appointment history
 
 ### Doctor
-- Secure login with privileged-access MFA support
-- Professional profile and consultation fee management
+- Secure login with privileged-account MFA support
+- Doctor profile, bio and consultation fee management
 - Availability management
-- Patient/appointment visibility according to authorization rules
+- Authorized patient and appointment visibility
 - Persistent FIFO queue operation
 - Call Next patient
-- Complete or mark eligible appointments through the queue lifecycle
+- Consultation lifecycle management
 - Authorized medical-record management
 
 ### Administrator
@@ -55,25 +56,27 @@ A cancelled appointment remains in history but no longer occupies its active slo
 - Doctor lifecycle management: active, inactive and suspended
 - Doctor and patient management
 - Department CRUD
-- Appointment/operational monitoring
+- Appointment and operational monitoring
 - Audit-log support for security-sensitive operations
 
 ## Engineering highlights
 
 - **RBAC:** patient, doctor and admin roles with server-side authorization
-- **Session security:** HttpOnly cookies, short-lived access tokens and rotating refresh sessions
-- **MFA:** encrypted TOTP support for privileged users
+- **Authentication:** short-lived JWT access tokens with HttpOnly-cookie refresh sessions
+- **Session recovery:** frontend automatically refreshes an expired access token and retries the failed request when the refresh session is still valid
+- **Refresh-token rotation:** refresh sessions are rotated server-side rather than storing long-lived access tokens in browser storage
+- **MFA:** encrypted TOTP support for doctors and administrators
 - **Database integrity:** MongoDB/Mongoose constraints and partial unique indexes for active records
-- **Appointment safety:** active-only slot uniqueness; cancelled appointments remain historical
-- **Token allocation:** reusable cancelled tokens plus protection against duplicate active tokens
+- **Appointment safety:** active-only slot uniqueness while cancelled records remain historical
+- **Token allocation:** safe cancelled-token reuse without renumbering active patients
 - **Concurrency:** database-level constraints and atomic operations protect competing bookings
 - **Queue:** persistent `QueueEntry` state and FIFO Call Next behavior
 - **Real-time:** Socket.IO queue rooms with server-side authorization
 - **Timezone:** centralized hospital timezone handling using `Asia/Kolkata`
-- **Security:** Helmet, rate limiting, request IDs, safe public errors, validation and audit logging
+- **Security:** Helmet, rate limiting, request IDs, validation, safe public errors and audit logging
 - **Observability:** health/metrics endpoints, structured request context and monitoring abstraction
-- **Data lifecycle:** missed-appointment processing and index migration scripts
-- **No operational mock data:** hospital state comes from the API/database/user actions
+- **Data lifecycle:** automatic missed-appointment processing and idempotent index migration scripts
+- **No operational mock data:** hospital state is driven by API, database and user actions
 
 ## Architecture
 
@@ -146,19 +149,21 @@ smart--hospital--queue/
 │   └── public/
 ├── docs/                     # security, testing, deployment and engineering docs
 ├── scripts/                  # repository-level validation scripts
-└── .github/workflows/        # CI validation
+├── .github/workflows/        # GitHub Actions CI
+└── README.md
 ```
 
 ## UI/UX and responsive design
 
-- Responsive layouts across desktop, tablet and mobile breakpoints
-- Admin dashboard with persistent desktop sidebar and mobile navigation drawer
-- Responsive patient and doctor navigation
+- Responsive layouts for desktop, tablet and mobile breakpoints
+- Patient, doctor and admin navigation with mobile-friendly layouts
+- Admin desktop sidebar with mobile navigation drawer
+- Responsive public navigation and mobile menu
 - Mobile-friendly forms, cards, filters and operational views
-- Responsive public navigation with mobile menu
+- Doctor and patient profile images displayed from application data
 - Accessible navigation labels, focus states and touch-friendly controls
 - Dedicated 404 page for unknown routes
-- No horizontal viewport overflow from long operational content
+- Layouts designed to avoid horizontal viewport overflow
 
 ## Technology stack
 
@@ -172,8 +177,8 @@ smart--hospital--queue/
 | Security | Helmet, express-rate-limit, express-validator, MFA/TOTP |
 | Files/media | Cloudinary + Multer |
 | Email | Nodemailer / SMTP |
-| Validation | Node test runner + frontend lint/build |
-| Deployment | Vercel-compatible frontend configuration + production backend configuration |
+| Validation | Node test runner, Oxlint and Vite production build |
+| Deployment | Vercel-compatible frontend + production backend configuration |
 | CI | GitHub Actions |
 
 ## Local development
@@ -193,9 +198,11 @@ Copy-Item backend/.env.example backend/.env
 Copy-Item frontend/.env.example frontend/.env
 ```
 
-Use a dedicated development database and development secrets. Never commit `.env` files or production credentials.
+Set the required local values in both files. Never commit `.env` files or production credentials.
 
 ### 2. Install dependencies
+
+From the repository root:
 
 ```powershell
 npm ci
@@ -209,6 +216,8 @@ npm ci --prefix frontend
 npm run dev
 ```
 
+The root command starts the backend and frontend development servers together.
+
 ### Useful validation commands
 
 ```powershell
@@ -218,21 +227,23 @@ npm run build
 npm run check:backend
 ```
 
-Equivalent package-level commands are available under `backend/` and `frontend/`.
+Package-level commands are also available under `backend/` and `frontend/`.
 
-## Existing database migration
+## Database migrations
 
-If an existing MongoDB database was created before the active-only appointment/token indexes were introduced, run the idempotent index migration before relying on cancellation/rebooking:
+For an existing MongoDB database created before the active-only appointment/token indexes were introduced, run the idempotent appointment-index migration before relying on cancellation/rebooking:
 
 ```powershell
 npm run migrate:appointment-indexes --prefix backend
 ```
 
-The migration is designed to correct stale legacy index definitions without deleting appointment history.
+For legacy embedded doctor-availability data, use the availability migration described in `docs/DEPLOYMENT.md`.
 
-## Cancellation and token-reuse integrity
+Migrations are designed to update schema/index state without deleting appointment history.
 
-The important invariant is:
+## Appointment, cancellation and token integrity
+
+The key invariant is:
 
 ```text
 ACTIVE appointment
@@ -257,19 +268,53 @@ Token #1 = new active appointment
 Token #2 = unchanged
 ```
 
-Concurrent requests are still protected so two patients cannot create duplicate active bookings for the same constrained slot/token.
+Concurrent requests are protected so two patients cannot create duplicate active bookings for the same constrained slot/token.
+
+Missed appointments are automatically transitioned by the backend missed-appointment worker and removed from the active queue while remaining part of appointment history.
+
+## Authentication and session behavior
+
+The application uses a short-lived access token together with a longer-lived refresh session stored in an HttpOnly cookie.
+
+```text
+Request
+  ↓
+Access token valid? ── Yes ──→ API response
+  │
+  No / 401
+  ↓
+POST /auth/refresh
+  ↓
+Refresh session valid? ── Yes ──→ new access token → retry request
+  │
+  No
+  ↓
+Session ends → user must authenticate again
+```
+
+This keeps the access token short-lived while avoiding unnecessary login prompts during an otherwise valid refresh session.
 
 ## Testing and CI
 
-The repository includes backend unit coverage and focused appointment-index verification. GitHub Actions validates:
+The repository includes backend unit tests and GitHub Actions CI. The CI workflow validates:
 
 1. dependency installation
 2. backend JavaScript syntax
 3. backend tests
 4. frontend lint
 5. frontend production build
+6. high-severity dependency audit
 
-The repository intentionally does not claim automated browser E2E coverage until a real Playwright/Cypress suite is installed and executed.
+Run the local checks with:
+
+```powershell
+npm run check:backend
+npm test
+npm run lint
+npm run build
+```
+
+The repository intentionally does **not** claim automated browser E2E coverage until a real Playwright/Cypress suite is installed and executed.
 
 See:
 
@@ -296,13 +341,13 @@ Only placeholder configuration belongs in `.env.example` files.
 
 ## Production-readiness boundary
 
-This is a **portfolio-grade engineering project**. It demonstrates production-oriented practices, but that does not mean it is certified or approved for real clinical use.
+This is a **portfolio-grade engineering project**. It demonstrates production-oriented practices, but it is not certified or approved for real clinical use.
 
 Infrastructure-dependent capabilities must be verified in the target deployment environment, including external monitoring, backup restoration, browser E2E, Docker-based deployment and OpenAPI publication.
 
 ## Portfolio talking points
 
-When presenting this project in an interview, focus on engineering decisions rather than the number of pages:
+For an interview or project presentation, useful engineering discussion areas include:
 
 - Why appointment uniqueness is enforced at the database layer
 - Why cancelled records are retained but excluded from active uniqueness
@@ -313,7 +358,8 @@ When presenting this project in an interview, focus on engineering decisions rat
 - How doctor suspension affects sessions and operational access
 - How timezone boundaries are centralized
 - How migrations protect existing production data
+- How automatic token refresh reduces unnecessary re-authentication without making access tokens long-lived
 
 ## License
 
-ISC. See the root `package.json` for the project metadata.
+ISC. See the root `package.json` for project metadata.

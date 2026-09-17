@@ -10,6 +10,7 @@ const {
 const {
   createAppointment,
   getMyAppointments,
+  clearMyAppointmentHistory,
   completeAppointment,
   cancelAppointment,
 } = require("../controllers/appointment.controller");
@@ -100,6 +101,24 @@ router.get(
   authorizeRoles("patient"),
 
   getMyAppointments
+);
+
+/*
+ * =====================================================
+ * CLEAR MY APPOINTMENT HISTORY (PATIENT VIEW ONLY)
+ * =====================================================
+ */
+
+router.patch(
+  "/my/history/clear",
+
+  protect,
+
+  authorizeRoles("patient"),
+
+  appointmentActionLimiter,
+
+  clearMyAppointmentHistory
 );
 
 /*

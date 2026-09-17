@@ -1,4 +1,5 @@
 const Patient = require("../models/Patient");
+const cloudinary = require("../config/cloudinary");
 
 const createPatientProfile = async (req, res) => {
   try {
@@ -119,74 +120,155 @@ const updatePatientProfile = async (req, res) => {
 
 const uploadProfilePicture = async (req, res) => {
   try {
-    console.log("==========================================");
-    console.log("PROFILE PICTURE UPLOAD STARTED");
-    console.log("User ID:", req.user?.userId);
-    console.log("File received:", req.file);
-    console.log("==========================================");
-
     if (!req.file) {
-      console.error("UPLOAD ERROR: req.file is missing");
-
       return res.status(400).json({
         success: false,
-        message:
-          "No profile picture received. Make sure the field name is 'profilePicture'.",
+        message: "Profile picture is required.",
       });
     }
 
-    console.log("Cloudinary upload successful");
-    console.log("Cloudinary URL:", req.file.path);
-    console.log("Cloudinary public ID:", req.file.filename);
-
-    const patient = await Patient.findOneAndUpdate(
-      {
-        user: req.user.userId,
-      },
-      {
-        profilePicture: req.file.path,
-      },
-      {
-        returnDocument: "after",
-        runValidators: true,
-      }
-    ).populate("user", "name email role");
+    const patient = await Patient.findOne({ user: req.user.userId });
 
     if (!patient) {
-      console.error(
-        "DATABASE ERROR: Patient profile not found for user:",
-        req.user.userId
-      );
-
       return res.status(404).json({
         success: false,
-        message: "Patient profile not found",
+        message: "Patient profile not found.",
       });
     }
 
-    console.log("Profile picture saved in database");
-    console.log("Profile picture URL:", patient.profilePicture);
-    console.log("PROFILE PICTURE UPLOAD SUCCESS");
-    console.log("==========================================");
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "smart-hospital/patients",
+          resource_type: "image",
+          transformation: [
+            { width: 500, height: 500, crop: "fill", gravity: "face" },
+            { quality: "auto" },
+            { fetch_format: "auto" },
+          ],
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+
+    if (!uploadResult?.secure_url || !uploadResult?.public_id) {
+      return res.status(500).json({
+        success: false,
+        message: "Cloudinary upload failed.",
+      });
+    }
+
+    const previousPublicId = patient.profilePicturePublicId;
+
+    patient.profilePicture = uploadResult.secure_url;
+    patient.profilePicturePublicId = uploadResult.public_id;
+    await patient.save();
+
+    // Best-effort cleanup of the old image after the new image is persisted.
+    if (
+      previousPublicId &&
+      previousPublicId !== uploadResult.public_id
+    ) {
+      try {
+        await cloudinary.uploader.destroy(previousPublicId);
+      } catch (deleteError) {
+        console.error("Previous patient image cleanup failed:", deleteError);
+      }
+    }
+
+    const updatedPatient = await Patient.findOne({
+      user: req.user.userId,
+    }).populate("user", "name email role");
 
     return res.status(200).json({
       success: true,
       message: "Profile picture updated successfully.",
-      patient,
+      patient: updatedPatient,
     });
   } catch (error) {
-    console.error("==========================================");
-    console.error("PROFILE PICTURE UPLOAD FAILED");
-    console.error("Error name:", error?.name);
-    console.error("Error message:", error?.message);
-    console.error("Error code:", error?.code);
-    console.error("Error details:", error);
-    console.error("Stack:", error?.stack);
-    console.error("==========================================");
+    console.error("Upload patient profile picture error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Server error while uploading profile picture.",
+    });
+  }
+};
+
+const deleteProfilePicture = async (req, res) => {
+  try {
+    const patient = await Patient.findOne({ user: req.user.userId });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient profile not found.",
+      });
+    }
+
+    if (patient.profilePicturePublicId) {
+      try {
+        await cloudinary.uploader.destroy(
+          patient.profilePicturePublicId
+        );
+      } catch (cloudinaryError) {
+        console.error("Patient Cloudinary delete error:", cloudinaryError);
+        return res.status(502).json({
+          success: false,
+          message: "Unable to remove the profile picture from image storage.",
+        });
+      }
+    }
+
+    patient.profilePicture = null;
+    patient.profilePicturePublicId = null;
+    await patient.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture removed successfully.",
+    });
+  } catch (error) {
+    console.error("Delete patient profile picture error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while removing profile picture.",
+    });
+  }
+};
+
+const clearPatientHistory = async (req, res) => {
+  try {
+    const patient = await Patient.findOneAndUpdate(
+      { user: req.user.userId },
+      { $set: { historyClearedAt: new Date() } },
+      { new: true }
+    );
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient profile not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Appointment history cleared from your personal view. Hospital records are retained.",
+      historyClearedAt: patient.historyClearedAt,
+    });
+  } catch (error) {
+    console.error("Clear patient history error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while clearing appointment history.",
     });
   }
 };
@@ -196,4 +278,6 @@ module.exports = {
   getPatientProfile,
   updatePatientProfile,
   uploadProfilePicture,
+  deleteProfilePicture,
+  clearPatientHistory,
 };

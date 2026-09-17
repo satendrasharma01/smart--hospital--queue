@@ -415,7 +415,7 @@ function DoctorQueue() {
    */
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="portal-shell min-h-screen bg-slate-50">
       <DoctorSidebar />
 
       <div className="min-w-0 flex-1">
@@ -535,20 +535,29 @@ function DoctorQueue() {
 
           <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                   Currently serving
                 </p>
 
                 {currentPatient ? (
                   <>
-                    <h2 className="mt-2 text-xl font-semibold text-slate-900">
-                      {currentPatient
-                        .patient
-                        ?.user
-                        ?.name ||
-                        "Patient"}
-                    </h2>
+                    <div className="mt-2 flex items-center gap-3">
+                      {currentPatient.patient?.profilePicture ? (
+                        <img
+                          src={currentPatient.patient.profilePicture}
+                          alt={currentPatient.patient?.user?.name || "Patient"}
+                          className="h-12 w-12 shrink-0 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                          <UserRound size={22} />
+                        </div>
+                      )}
+                      <h2 className="min-w-0 break-words text-xl font-semibold text-slate-900">
+                        {currentPatient.patient?.user?.name || "Patient"}
+                      </h2>
+                    </div>
 
                     <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-500">
                       <span>
@@ -740,11 +749,17 @@ function DoctorQueue() {
                         {/* Patient */}
 
                         <div className="mt-4 flex items-center gap-3 md:mt-0">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                            <UserRound
-                              size={17}
+                          {appointment.patient?.profilePicture ? (
+                            <img
+                              src={appointment.patient.profilePicture}
+                              alt={appointment.patient?.user?.name || "Patient"}
+                              className="h-9 w-9 shrink-0 rounded-lg object-cover"
                             />
-                          </div>
+                          ) : (
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                              <UserRound size={17} />
+                            </div>
+                          )}
 
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium text-slate-900">

@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 
+import { Link } from "react-router-dom";
 import {
   Activity,
   CalendarDays,
@@ -12,8 +13,6 @@ import {
   Search,
   UserRound,
 } from "lucide-react";
-
-import { Link } from "react-router-dom";
 
 import api from "../../services/api";
 import socket from "../../services/socket";
@@ -378,7 +377,7 @@ function PatientDashboard() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen bg-slate-50">
+      <div className="portal-shell min-h-screen bg-slate-50">
         <PatientSidebar />
 
         <main className="flex min-w-0 flex-1 items-center justify-center px-4 sm:px-6">
@@ -418,6 +417,15 @@ function PatientDashboard() {
     user?.email ||
     "Not available";
 
+  const patientProfilePicture =
+    profile?.profilePicture || null;
+
+  const activeAppointments = appointments.filter((appointment) =>
+    ["booked", "waiting", "in-progress"].includes(
+      appointment.status
+    )
+  );
+
   /*
    * =====================================================
    * UI
@@ -425,7 +433,7 @@ function PatientDashboard() {
    */
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="portal-shell min-h-screen bg-slate-50">
       <PatientSidebar />
 
       <div className="min-w-0 flex-1">
@@ -453,8 +461,16 @@ function PatientDashboard() {
                 </p>
               </div>
 
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200">
-                <UserRound size={17} />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                {patientProfilePicture ? (
+                  <img
+                    src={patientProfilePicture}
+                    alt={patientName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <UserRound size={17} className="text-slate-600" />
+                )}
               </div>
             </div>
           </div>
@@ -473,40 +489,34 @@ function PatientDashboard() {
           </div>
 
           {/* =================================================
-              QUICK PROFILE
+              PATIENT IDENTITY
           ================================================= */}
 
-          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                  <UserRound
-                    size={25}
-                    className="text-slate-600"
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 sm:h-16 sm:w-16">
+                {patientProfilePicture ? (
+                  <img
+                    src={patientProfilePicture}
+                    alt={patientName}
+                    className="h-full w-full object-cover"
                   />
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                    Patient Profile
-                  </p>
-
-                  <h3 className="mt-1 text-lg font-semibold text-slate-900">
-                    {patientName}
-                  </h3>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    {patientEmail}
-                  </p>
-                </div>
+                ) : (
+                  <UserRound size={26} className="text-slate-500" />
+                )}
               </div>
 
-              <Link
-                to="/patient/profile"
-                className="w-fit rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                View Profile
-              </Link>
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Patient Profile
+                </p>
+                <h3 className="mt-1 truncate text-lg font-semibold text-slate-900">
+                  {patientName}
+                </h3>
+                <p className="mt-1 truncate text-sm text-slate-500">
+                  {patientEmail}
+                </p>
+              </div>
             </div>
           </section>
 
@@ -611,7 +621,7 @@ function PatientDashboard() {
           ================================================= */}
 
           {!queue &&
-            appointments.length === 0 && (
+            activeAppointments.length === 0 && (
               <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
                 <div className="flex items-center gap-4">
                   <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
@@ -657,7 +667,7 @@ function PatientDashboard() {
                 </p>
               </div>
 
-              {appointments.length >
+              {activeAppointments.length >
                 0 && (
                 <Link
                   to="/patient/appointments"
@@ -668,7 +678,7 @@ function PatientDashboard() {
               )}
             </div>
 
-            {appointments.length ===
+            {activeAppointments.length ===
             0 ? (
               <div className="mt-5 rounded-xl border border-slate-200 bg-white p-10 text-center">
                 <CalendarDays
@@ -695,7 +705,7 @@ function PatientDashboard() {
               </div>
             ) : (
               <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {appointments
+                {activeAppointments
                   .slice(0, 4)
                   .map(
                     (appointment) => (
