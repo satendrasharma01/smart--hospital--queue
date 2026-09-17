@@ -64,7 +64,7 @@ function DoctorSidebar() {
         </div>
       )}
 
-      <aside className="hidden min-h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200 px-5"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white"><Activity size={17} /></span><div><p className="text-sm font-semibold text-slate-900">Smart Hospital</p><p className="text-[11px] text-slate-500">Doctor Portal</p></div></div>
         {navigation(false)}
         <div className="shrink-0 border-t border-slate-200 p-3"><div className="mb-2 px-3"><p className="truncate text-xs font-medium text-slate-800">{user?.name || "Doctor"}</p><p className="text-[11px] text-slate-500">Doctor</p></div><button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600"><LogOut size={18} />Logout</button></div>
