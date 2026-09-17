@@ -153,6 +153,16 @@ smart--hospital--queue/
 └── README.md
 ```
 
+## Live Demo
+
+[Open Smart Hospital Queue — Live Application](https://smart-hospital-queue-zeta.vercel.app/)
+
+## UI Documentation
+
+The repository includes a complete **44-screenshot UI documentation PDF** covering the public landing pages, patient portal, doctor portal, admin portal, appointment flow, live queue states and email notifications. The PDF contains a named index mapping each screenshot to its corresponding page.
+
+[View the 44-Screenshot UI Documentation](docs/Smart-Hospital-UI-Documentation.pdf)
+
 ## UI/UX and responsive design
 
 - Responsive layouts for desktop, tablet and mobile breakpoints
